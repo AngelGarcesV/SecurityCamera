@@ -1,19 +1,39 @@
-// src/pages/Camaras.jsx
+// Camaras.jsx (modo pruebas con JSON)
 import { useEffect, useState } from "react";
-import api from "../axiosConfig";
-import "@/styles/layout.css";
-import "@/styles/camaras.css";
+import '@/styles/layout.css';
+import '@/styles/camaras.css';
 
 function Camaras() {
   const [camaras, setCamaras] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    // Datos de prueba
+    const datosPrueba = [
+      {
+        id: 1,
+        nombre: "Cámara Principal",
+        direccion: "Calle 123 #45-67",
+        coordenadaX: 4.653,
+        coordenadaY: -74.083,
+      },
+      {
+        id: 2,
+        nombre: "Cámara Entrada",
+        direccion: "Carrera 10 #25-30",
+        coordenadaX: 4.657,
+        coordenadaY: -74.078,
+      },
+      {
+        id: 3,
+        nombre: "Cámara Parqueadero",
+        direccion: "Av. Las Palmas #8-15",
+        coordenadaX: 4.66,
+        coordenadaY: -74.08,
+      }
+    ];
 
-    api
-      .get("/camaras/mis-camaras")
-      .then((res) => setCamaras(res.data))
-      .catch(() => alert("Error al cargar tus cámaras"));
+    // Simula respuesta asincrónica
+    setTimeout(() => setCamaras(datosPrueba), 500);
   }, []);
 
   return (

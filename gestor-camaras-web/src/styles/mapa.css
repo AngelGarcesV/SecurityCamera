@@ -1,0 +1,41 @@
+/* mapa.css */
+
+.mapa-container {
+  background-color: #f9f7f1; /* tono hueso suave */
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.mapa-container .page-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 8px;
+}
+
+.mapa-container .page-subtitle {
+  color: #666666;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.leaflet-container {
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 0;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.leaflet-popup-content {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Ajustar el ícono si se quiere un tamaño más controlado */
+.leaflet-marker-icon {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
+}

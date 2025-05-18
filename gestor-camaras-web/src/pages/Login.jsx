@@ -22,7 +22,7 @@ function Login() {
 
       navigate("/reportes");
     } catch (error) {
-      alert(error);
+      alert("Credenciales inválidas");
     }
   };
 
