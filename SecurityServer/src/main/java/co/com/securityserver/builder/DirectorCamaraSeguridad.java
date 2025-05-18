@@ -10,6 +10,7 @@ public class DirectorCamaraSeguridad{
         this.builder = builder;
     }
     public Camara ConstruirCamara(CamaraDTO infoCamara){
+        builder.setId(infoCamara.getId());
         builder.setDescripcion(infoCamara.getDescripcion());
         builder.setCoordenadax(infoCamara.getCoordenadax());
         builder.setCoordenaday(infoCamara.getCoordenaday());

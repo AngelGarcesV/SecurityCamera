@@ -3,6 +3,7 @@ package co.com.securityserver.builder;
 import co.com.securityserver.models.Camara;
 
 public interface CamaraBuilder {
+    CamaraBuilder setId(Long id);
     CamaraBuilder setDescripcion(String descripcion);
     CamaraBuilder setCoordenadax(Double coordenadax);
     CamaraBuilder setCoordenaday(Double coordenaday);

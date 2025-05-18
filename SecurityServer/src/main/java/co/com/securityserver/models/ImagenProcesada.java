@@ -20,7 +20,7 @@ public class ImagenProcesada {
     private Byte[] imagenEditada;
     private Date fecha;
     @ManyToOne
-    @JoinColumn(name = "imagen_id")
+    @JoinColumn(name = "imagen_id", nullable = false)
     private Imagen imagen;
 
     public ImagenProcesada() {

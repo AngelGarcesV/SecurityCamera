@@ -6,6 +6,9 @@ import co.com.securityserver.models.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -21,13 +24,42 @@ public class Camara {
     private Double coordenaday;
     private String resolucion;
 
+    @OneToMany(mappedBy = "camara", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Imagen> imagenes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "camara", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Video> videos = new ArrayList<>();
+
     public Camara() {
     }
-    public Camara(Usuario usuario, String descripcion, Double coordenadax, Double coordenaday, String resolucion) {
+    public Camara(Long id, Usuario usuario, String descripcion, Double coordenadax, Double coordenaday, String resolucion) {
+        this.id = id;
         this.usuario = usuario;
         this.descripcion = descripcion;
         this.coordenadax = coordenadax;
         this.coordenaday = coordenaday;
         this.resolucion = resolucion;
+    }
+
+
+
+    public void addImagen(Imagen imagen) {
+        imagenes.add(imagen);
+        imagen.setCamara(this);
+    }
+
+    public void removeImagen(Imagen imagen) {
+        imagenes.remove(imagen);
+        imagen.setCamara(null);
+    }
+
+    public void addVideo(Video video) {
+        videos.add(video);
+        video.setCamara(this);
+    }
+
+    public void removeVideo(Video video) {
+        videos.remove(video);
+        video.setCamara(null);
     }
 }

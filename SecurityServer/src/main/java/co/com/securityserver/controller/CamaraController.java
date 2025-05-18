@@ -1,6 +1,7 @@
 package co.com.securityserver.controller;
 
 import co.com.securityserver.dto.CamaraDTO;
+import co.com.securityserver.mapper.CamaraMapper;
 import co.com.securityserver.models.Camara;
 import co.com.securityserver.service.CamaraService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,18 +22,20 @@ public class CamaraController {
 
 
     @GetMapping("/all")
-    public List<Camara> getAllCamaras() {
-        return camaraService.getAllCamaras();
+    public List<CamaraDTO> getAllCamaras() {
+        return camaraService.getAllCamaras().stream()
+                .map(CamaraMapper::toCamaraDTO)
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/save")
-    public Camara saveCamara(@RequestBody CamaraDTO camaraDTO) {
-        return camaraService.saveCamara(camaraDTO);
+    public CamaraDTO saveCamara(@RequestBody CamaraDTO camaraDTO) {
+        return CamaraMapper.toCamaraDTO(camaraService.saveCamara(camaraDTO));
     }
 
-    @PutMapping("/{id}")
-    public Camara updateCamara(@PathVariable Long id, @RequestBody CamaraDTO camaraDTO) {
-        return camaraService.updateCamara(camaraDTO);
+    @PutMapping("/update")
+    public CamaraDTO updateCamara( @RequestBody CamaraDTO camaraDTO) {
+        return CamaraMapper.toCamaraDTO(camaraService.updateCamara(camaraDTO));
     }
 
     @DeleteMapping("/{id}")
@@ -45,12 +48,14 @@ public class CamaraController {
     }
 
     @GetMapping("/{id}")
-    public Camara getCamaraById(@PathVariable Long id) {
-        return camaraService.getCamaraById(id);
+    public CamaraDTO getCamaraById(@PathVariable Long id) {
+        return CamaraMapper.toCamaraDTO(camaraService.getCamaraById(id));
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<Camara> getCamarasByUsuarioId(@PathVariable Long usuarioId) {
-        return camaraService.getCamarasByUsuarioId(usuarioId);
+    public List<CamaraDTO> getCamarasByUsuarioId(@PathVariable Long usuarioId) {
+        return camaraService.getCamarasByUsuarioId(usuarioId).stream()
+                .map(CamaraMapper::toCamaraDTO)
+                .collect(Collectors.toList());
     }
 }

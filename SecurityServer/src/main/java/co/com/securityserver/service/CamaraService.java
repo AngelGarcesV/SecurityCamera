@@ -33,7 +33,7 @@ public class CamaraService {
 
     @Transactional
     public Camara saveCamara(CamaraDTO dto) {
-        Usuario infoUser = usuarioService.getUsuarioById(dto.getId());
+        Usuario infoUser = usuarioService.getUsuarioById(dto.getUsuarioId());
         if (infoUser == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
         }

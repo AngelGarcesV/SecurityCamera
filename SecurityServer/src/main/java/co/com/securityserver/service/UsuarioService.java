@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class UsuarioService {
@@ -26,7 +27,7 @@ public class UsuarioService {
     @Transactional
     public Usuario saveUsuario(Usuario usuario) {
         if (userRepo.existsByCorreo(usuario.getCorreo())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un usuario con el correo: " + usuario.getCorreo());
         }else{
             usuario.setPassword(this.hashPassword(usuario.getPassword()));
             return userRepo.save(usuario);
@@ -53,11 +54,13 @@ public class UsuarioService {
     }
 
     @Transactional
-    public Usuario updateUsuario(Usuario usuario) {
-        if (userRepo.existsById(usuario.getId())) {
-            return userRepo.save(usuario);
+    public Usuario updateUsuario(Usuario infoUsuario) {
+        Usuario userSearch = userRepo.findByCorreo(infoUsuario.getCorreo()).orElse(null);
+        if (userRepo.existsById(infoUsuario.getId())  && (userSearch == null || (Objects.equals(userSearch.getId(), infoUsuario.getId())))){
+            infoUsuario.setPassword(this.hashPassword(infoUsuario.getPassword()));
+            return userRepo.save(infoUsuario);
         }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado, o el correo ya esta registrado");
     }
 
     @Transactional(readOnly = true)

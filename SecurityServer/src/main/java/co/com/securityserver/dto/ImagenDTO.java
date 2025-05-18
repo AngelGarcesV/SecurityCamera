@@ -15,19 +15,19 @@ public class ImagenDTO {
     private Byte[] imagen;
     private String resolucion;
     private Date fecha;
-    private Long camara_id;
-    private Long usuario_id;
+    private Long camaraId;
+    private Long usuarioId;
 
     public ImagenDTO() {
     }
 
-    public ImagenDTO(Long id, String nombre, Byte[] imagen, String resolucion, Date fecha, Long camara_id, Long usuario_id) {
+    public ImagenDTO(Long id, String nombre, Byte[] imagen, String resolucion, Date fecha, Long camaraId, Long usuarioId) {
         this.id = id;
         this.nombre = nombre;
         this.imagen = imagen;
         this.resolucion = resolucion;
         this.fecha = fecha;
-        this.camara_id = camara_id;
-        this.usuario_id = usuario_id;
+        this.camaraId = camaraId;
+        this.usuarioId = usuarioId;
     }
 }

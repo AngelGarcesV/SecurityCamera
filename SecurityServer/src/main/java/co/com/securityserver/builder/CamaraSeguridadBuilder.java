@@ -5,6 +5,7 @@ import co.com.securityserver.models.Usuario;
 import co.com.securityserver.service.UsuarioService;
 
 public class CamaraSeguridadBuilder implements CamaraBuilder{
+    private Long id;
     private String descripcion;
     private Double coordenadax;
     private Double coordenaday;
@@ -17,6 +18,11 @@ public class CamaraSeguridadBuilder implements CamaraBuilder{
         this.usuarioService = usuarioService;
     }
 
+    @Override
+    public CamaraSeguridadBuilder setId(Long id) {
+        this.id = id;
+        return this;
+    }
 
     @Override
     public CamaraSeguridadBuilder setDescripcion(String descripcion) {
@@ -49,6 +55,6 @@ public class CamaraSeguridadBuilder implements CamaraBuilder{
         if (usuario == null) {
             throw new IllegalStateException("Usuario no puede ser nulo");
         }
-        return new Camara(usuario, descripcion, coordenadax, coordenaday, resolucion);
+        return new Camara(id, usuario, descripcion, coordenadax, coordenaday, resolucion);
     }
 }

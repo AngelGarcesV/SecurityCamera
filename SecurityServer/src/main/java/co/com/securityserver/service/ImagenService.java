@@ -35,8 +35,8 @@ public class ImagenService {
 
     @Transactional
     public Imagen saveImagen(ImagenDTO imagenDTO) {
-        Usuario infoUser= usuarioRepository.findById(imagenDTO.getUsuario_id()).orElse(null);
-        Camara infoCamera = camaraRepository.findById(imagenDTO.getCamara_id()).orElse(null);
+        Usuario infoUser= usuarioRepository.findById(imagenDTO.getUsuarioId()).orElse(null);
+        Camara infoCamera = camaraRepository.findById(imagenDTO.getCamaraId()).orElse(null);
         if(infoUser != null && infoCamera != null) {
             Imagen image = ImagenMapper.toImagen(imagenDTO, infoCamera, infoUser);
             return imagenRepository.save(image);
@@ -70,11 +70,11 @@ public class ImagenService {
     @Transactional
     public Imagen updateImagen(ImagenDTO dto) {
         Imagen imageValidation = imagenRepository.findById(dto.getId()).orElse(null);
-        if(imageValidation != null) {
+        if(imageValidation == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada");
         }
-        Usuario infoUser= usuarioRepository.findById(dto.getUsuario_id()).orElse(null);
-        Camara infoCamera = camaraRepository.findById(dto.getCamara_id()).orElse(null);
+        Usuario infoUser= usuarioRepository.findById(dto.getUsuarioId()).orElse(null);
+        Camara infoCamera = camaraRepository.findById(dto.getCamaraId()).orElse(null);
         if(infoUser != null && infoCamera != null) {
             Imagen image = ImagenMapper.toImagen(dto, infoCamera, infoUser);
             return imagenRepository.save(image);

@@ -30,23 +30,15 @@ public class UsuarioController {
         return UsuarioMapper.toUsuarioDTO(
                 usuarioService.saveUsuario(infoUsuario));
     }
-    @PutMapping("/{id}")
-    public UsuarioDTO updateUsuario(@PathVariable Long id ,@RequestBody Usuario infoUsuario) {
-        UsuarioDTO user = UsuarioMapper.toUsuarioDTO(usuarioService.getUsuarioById(id));
-        if (user != null) {
+    @PutMapping("/update")
+    public UsuarioDTO updateUsuario(@RequestBody Usuario infoUsuario) {
             return UsuarioMapper.toUsuarioDTO(usuarioService.updateUsuario(infoUsuario));
-        }else{
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
-        }
     }
 
     @DeleteMapping("/{id}")
     public boolean deleteUsuario(@PathVariable Long id) {
-        if (usuarioService.deleteUsuario(id)) {
-            return true;
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
-        }
+        return usuarioService.deleteUsuario(id);
+
     }
 
     @GetMapping("/{id}")

@@ -20,10 +20,10 @@ public class Video {
     private Byte[] video;
     private String duracion;
     @ManyToOne
-    @JoinColumn(name = "camara_id")
+    @JoinColumn(name = "camara_id", nullable = false)
     private Camara camara;
     @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
     public Video() {
