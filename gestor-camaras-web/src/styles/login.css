@@ -1,0 +1,165 @@
+/* login.css */
+body, html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #1a2341;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.login-card {
+  width: 380px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 24px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-title {
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.input-container {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.login-input {
+  width: 100%;
+  padding-left: 40px;
+  padding-right: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-width: 1px;
+  border-color: #d1d5db;
+  border-radius: 4px;
+  outline: none;
+  font-size: 14px;
+  background-color: white;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox {
+  margin-right: 8px;
+}
+
+.checkbox-label {
+  font-size: 14px;
+  color: #374151;
+}
+
+.forgot-link {
+  font-size: 14px;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.login-button {
+  width: 100%;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background-color: #2563eb;
+}
+
+.register-container {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.register-text {
+  color: #6b7280;
+}
+
+.register-link {
+  color: #3b82f6;
+  text-decoration: none;
+}
