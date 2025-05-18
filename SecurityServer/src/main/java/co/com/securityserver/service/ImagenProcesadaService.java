@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 public class ImagenProcesadaService {
 
@@ -22,6 +24,11 @@ public class ImagenProcesadaService {
     private ImagenProcesadaRepository imagenProcesadaRepository;
     @Autowired
     private ImagenRepository imagenRepository;
+
+    public ImagenProcesadaService(ImagenProcesadaRepository imagenProcesadaRepository, ImagenRepository imagenRepository) {
+        this.imagenProcesadaRepository = imagenProcesadaRepository;
+        this.imagenRepository = imagenRepository;
+    }
 
     @Transactional(readOnly = true)
     public ImagenProcesada saveImagenProcesada(ImagenProcesadaDTO imagenProcesadaDTO) {
@@ -43,5 +50,24 @@ public class ImagenProcesadaService {
             return true;
         }
         return false;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ImagenProcesada> getAllImagenProcesada(){
+        List<ImagenProcesada> listImagenProcesada = (List<ImagenProcesada>) imagenProcesadaRepository.findAll();
+        if(listImagenProcesada.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron imágenes procesadas");
+        }
+        return listImagenProcesada;
+    }
+
+    @Transactional
+    public ImagenProcesada updateImagenProcesada(ImagenProcesadaDTO dto){
+        Imagen infoImage = imagenRepository.findById(dto.getImagenId()).orElse(null);
+        if (infoImage == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada");
+        }
+        ImagenProcesada updatedImage = ImagenProcesadaMapper.toImagenProcesada(dto, infoImage);
+        return imagenProcesadaRepository.save(updatedImage);
     }
 }

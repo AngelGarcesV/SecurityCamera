@@ -58,6 +58,7 @@ public class ImagenService {
         return imageList;
     }
 
+    @Transactional
     public boolean deleteImagen(Long id) {
         if (imagenRepository.existsById(id)) {
             imagenRepository.deleteById(id);

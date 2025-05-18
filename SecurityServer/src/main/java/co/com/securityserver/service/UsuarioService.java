@@ -19,6 +19,10 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository userRepo;
 
+    public UsuarioService(UsuarioRepository userRepo) {
+        this.userRepo = userRepo;
+    }
+
     @Transactional
     public Usuario saveUsuario(Usuario usuario) {
         if (userRepo.existsByCorreo(usuario.getCorreo())) {

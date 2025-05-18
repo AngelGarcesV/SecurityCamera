@@ -23,6 +23,11 @@ public class CamaraService {
     @Autowired
     private UsuarioService usuarioService;
 
+    public CamaraService(CamaraRepository camaraRepo, UsuarioService usuarioService) {
+        this.camaraRepo = camaraRepo;
+        this.usuarioService = usuarioService;
+    }
+
     @Transactional
     public Camara saveCamara(CamaraDTO dto) {
         Usuario infoUser = usuarioService.getUsuarioById(dto.getId());
