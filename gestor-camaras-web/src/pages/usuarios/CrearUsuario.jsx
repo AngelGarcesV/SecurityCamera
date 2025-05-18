@@ -1,14 +1,18 @@
-// src/pages/usuarios/CrearUsuario.jsx
 import { useState } from "react";
 import api from "../../axiosConfig";
+import "@/styles/layout.css";
+import "@/styles/usuarios.css";
 
 function CrearUsuario() {
   const [formData, setFormData] = useState({
     nombre: "",
     correo: "",
     password: "",
-    rol: "user", // por defecto será usuario normal
+    rol: "user",
   });
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,77 +21,94 @@ function CrearUsuario() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
     try {
-      await api.post("/usuarios", formData); // asegúrate de que esta ruta existe en el backend
-      alert("Usuario creado correctamente");
+      // Modificado para usar el endpoint correcto
+      await api.post("/usuario/save", formData);
+      setSuccessMessage("Usuario creado correctamente");
       setFormData({ nombre: "", correo: "", password: "", rol: "user" });
+      setLoading(false);
     } catch (error) {
       console.error("Error al crear usuario:", error);
-      alert("Hubo un problema al crear el usuario");
+      setErrorMessage("Hubo un problema al crear el usuario");
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h3 className="text-xl font-semibold mb-4">Crear Usuario</h3>
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-        <div>
-          <label className="block font-medium">Nombre</label>
-          <input
-            type="text"
-            name="nombre"
-            value={formData.nombre}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        </div>
+      <div>
+        <h3 className="text-xl font-semibold mb-4">Crear Usuario</h3>
 
-        <div>
-          <label className="block font-medium">Correo</label>
-          <input
-            type="email"
-            name="correo"
-            value={formData.correo}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        </div>
+        {successMessage && (
+            <div className="alert alert-success">{successMessage}</div>
+        )}
 
-        <div>
-          <label className="block font-medium">Contraseña</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        </div>
+        {errorMessage && (
+            <div className="alert alert-danger">{errorMessage}</div>
+        )}
 
-        <div>
-          <label className="block font-medium">Rol</label>
-          <select
-            name="rol"
-            value={formData.rol}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
+        <form onSubmit={handleSubmit} className="form-container">
+          <div className="form-group">
+            <label>Nombre</label>
+            <input
+                type="text"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                className="form-control"
+                required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Correo</label>
+            <input
+                type="email"
+                name="correo"
+                value={formData.correo}
+                onChange={handleChange}
+                className="form-control"
+                required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Contraseña</label>
+            <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="form-control"
+                required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Rol</label>
+            <select
+                name="rol"
+                value={formData.rol}
+                onChange={handleChange}
+                className="form-control"
+            >
+              <option value="user">Usuario</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+
+          <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
           >
-            <option value="user">Usuario</option>
-            <option value="admin">Administrador</option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Crear
-        </button>
-      </form>
-    </div>
+            {loading ? "Creando..." : "Crear Usuario"}
+          </button>
+        </form>
+      </div>
   );
 }
 
