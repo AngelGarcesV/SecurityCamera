@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxWidth="950.0" prefHeight="520.0" prefWidth="950.0" style="-fx-background-color: #f5f5f5;" xmlns="http://javafx.com/javafx/22-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.com.cliente.controller.FotosController">
+   <children>
+      <Label layoutX="40.0" layoutY="40.0" text="Galería de Fotos" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="40.0">
+         <font>
+            <Font name="System Bold" size="24.0" />
+         </font>
+      </Label>
+      <FlowPane fx:id="photoGrid" hgap="20.0" layoutX="40.0" layoutY="100.0" prefHeight="400.0" prefWidth="870.0" vgap="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="100.0">
+         <!-- Las fotos se agregarán dinámicamente -->
+      </FlowPane>
+   </children>
+</AnchorPane>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/22-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.com.cliente.controller.ApplicationController">
+    <left>
+        <VBox prefHeight="600.0" prefWidth="250.0" style="-fx-background-color: #262626;" BorderPane.alignment="CENTER">
+            <children>
+                <AnchorPane prefHeight="100.0" prefWidth="250.0" style="-fx-background-color: #262626;">
+                    <children>
+                        <Label alignment="CENTER" layoutX="74.0" layoutY="28.0" text="SEGURIDAD" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="24.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </AnchorPane>
+                <VBox prefHeight="500.0" prefWidth="250.0">
+                    <children>
+                        <AnchorPane fx:id="videosOption" onMouseClicked="#handleMenuClick" prefHeight="60.0" prefWidth="250.0" style="-fx-background-color: #404040;">
+                            <children>
+                                <Label layoutX="85.0" layoutY="17.0" text="VIDEOS" textFill="WHITE">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </AnchorPane>
+                        <AnchorPane fx:id="fotosOption" onMouseClicked="#handleMenuClick" prefHeight="60.0" prefWidth="250.0" style="-fx-background-color: #404040;">
+                            <children>
+                                <Label layoutX="85.0" layoutY="17.0" text="FOTOS" textFill="WHITE">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                            <VBox.margin>
+                                <Insets />
+                            </VBox.margin>
+                        </AnchorPane>
+                        <AnchorPane fx:id="grabarVideoOption" onMouseClicked="#handleMenuClick" prefHeight="60.0" prefWidth="250.0" style="-fx-background-color: #404040;">
+                            <children>
+                                <Label layoutX="85.0" layoutY="17.0" text="GRABAR VIDEO" textFill="WHITE">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </AnchorPane>
+                        <AnchorPane fx:id="editarFotosOption" onMouseClicked="#handleMenuClick" prefHeight="60.0" prefWidth="250.0" style="-fx-background-color: #404040;">
+                            <children>
+                                <Label layoutX="85.0" layoutY="17.0" text="EDITAR FOTOS" textFill="WHITE">
+                                    <font>
+                                        <Font name="System Bold" size="14.0" />
+                                    </font>
+                                </Label>
+                            </children>
+                        </AnchorPane>
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </left>
+    <center>
+        <BorderPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <top>
+                <AnchorPane prefHeight="80.0" prefWidth="950.0" style="-fx-background-color: #646464;" BorderPane.alignment="CENTER">
+                    <children>
+                        <Label fx:id="titleLabel" layoutX="436.0" layoutY="26.0" text="GRABAR VIDEO" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="20.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </AnchorPane>
+            </top>
+            <center>
+                <StackPane fx:id="contentArea" prefHeight="150.0" prefWidth="200.0" style="-fx-background-color: #f5f5f5;" BorderPane.alignment="CENTER" />
+            </center>
+        </BorderPane>
+    </center>
+</BorderPane>
