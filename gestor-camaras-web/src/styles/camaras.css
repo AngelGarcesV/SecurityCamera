@@ -1,0 +1,12 @@
+/* camaras.css */
+
+.table-container {
+  color: #333333; /* Color gris para texto dentro del contenedor */
+}
+
+.data-table th,
+.data-table td {
+  color: #333333 !important; /* Forzamos que el texto sea gris oscuro */
+  background-color: white; /* Asegura contraste si el fondo está claro */
+}
+

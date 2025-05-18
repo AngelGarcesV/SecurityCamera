@@ -15,6 +15,8 @@ public class Video {
     private Long id;
     private String nombre;
     private Date fecha;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
     private Byte[] video;
     private String duracion;
     @ManyToOne

@@ -14,6 +14,8 @@ public class Imagen {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
     private String nombre;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
     private Byte[] imagen;
     private String resolucion;
     private Date fecha;

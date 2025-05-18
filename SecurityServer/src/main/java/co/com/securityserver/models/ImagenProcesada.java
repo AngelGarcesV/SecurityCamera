@@ -15,6 +15,8 @@ public class ImagenProcesada {
     private Long id;
     private String nombre;
     private String resolucion;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
     private Byte[] imagenEditada;
     private Date fecha;
     @ManyToOne
