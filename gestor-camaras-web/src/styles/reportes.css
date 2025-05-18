@@ -1,0 +1,29 @@
+/* reportes.css */
+
+/* Puedes poner estilos específicos para la página de reportes aquí */
+
+/* Ejemplo: cambiar color del título específicamente en esta página */
+.page-header .page-title {
+  color: #2e3a87;
+}
+
+/* Estilo para el gráfico */
+.table-container h2 {
+  margin-bottom: 15px;
+  color: #3949ab;
+}
+
+/* Animación sutil al cargar tarjetas */
+.stat-card {
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.02);
+}
+
+/* Asegura que los textos dentro de las tarjetas sean oscuros y legibles */
+.stat-card h3,
+.stat-card .stat-value {
+  color: var(--text-dark); /* usa el color #333333 definido en layout.css */
+}
