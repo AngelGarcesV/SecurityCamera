@@ -32,7 +32,7 @@ public class VideoMapper {
                 video.getFecha(),
                 video.getVideo(),
                 video.getDuracion(),
-                video.getCamara(),
+                video.getCamara().getId(),
                 video.getUsuario().getId()
         );
     }

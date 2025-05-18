@@ -63,11 +63,20 @@ public class ImagenProcesadaService {
 
     @Transactional
     public ImagenProcesada updateImagenProcesada(ImagenProcesadaDTO dto){
+        ImagenProcesada infoImagenProcesada = imagenProcesadaRepository.findById(dto.getImagenId()).orElse(null);
+        if (infoImagenProcesada == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada");
+        }
         Imagen infoImage = imagenRepository.findById(dto.getImagenId()).orElse(null);
         if (infoImage == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen sin editar no encontrada");
         }
         ImagenProcesada updatedImage = ImagenProcesadaMapper.toImagenProcesada(dto, infoImage);
         return imagenProcesadaRepository.save(updatedImage);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ImagenProcesada> getImagenProcesadaByImagenId(Long imagenId) {
+       return  imagenProcesadaRepository.findByImagenId(imagenId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron imágenes procesadas para la imagen con ID: " + imagenId));
     }
 }

@@ -12,19 +12,19 @@ public class VideoDTO {
     private Date fecha;
     private Byte[] video;
     private String duracion;
-    private Camara camara;
+    private Long camaraId;
     private Long usuarioId;
 
     public VideoDTO() {
     }
 
-    public VideoDTO(Long id, String nombre, Date fecha, Byte[] video, String duracion, Camara camara, Long usuarioId) {
+    public VideoDTO(Long id, String nombre, Date fecha, Byte[] video, String duracion, Long camaraId, Long usuarioId) {
         this.id = id;
         this.nombre = nombre;
         this.fecha = fecha;
         this.video = video;
         this.duracion = duracion;
-        this.camara = camara;
+        this.camaraId = camaraId;
         this.usuarioId = usuarioId;
     }
 }

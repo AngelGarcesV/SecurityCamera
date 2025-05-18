@@ -67,6 +67,31 @@ public class ImagenService {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada");
     }
 
+    @Transactional
+    public Imagen updateImagen(ImagenDTO dto) {
+        Imagen imageValidation = imagenRepository.findById(dto.getId()).orElse(null);
+        if(imageValidation != null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Imagen no encontrada");
+        }
+        Usuario infoUser= usuarioRepository.findById(dto.getUsuario_id()).orElse(null);
+        Camara infoCamera = camaraRepository.findById(dto.getCamara_id()).orElse(null);
+        if(infoUser != null && infoCamera != null) {
+            Imagen image = ImagenMapper.toImagen(dto, infoCamera, infoUser);
+            return imagenRepository.save(image);
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario o Camara no encontrados");
+    }
 
-
+    @Transactional(readOnly = true)
+    public List<Imagen> getImagenByCamaraId(Long camaraId) {
+        return imagenRepository.findByCamaraId(camaraId)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron imágenes para la cámara con ID: " + camaraId));
+    }
+    @Transactional(readOnly = true)
+    public List<Imagen> getImagenByUsuarioId(Long usuarioId) {
+        return imagenRepository.findByUsuarioId(usuarioId)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron imágenes para el usuario con ID: " + usuarioId));
+    }
 }

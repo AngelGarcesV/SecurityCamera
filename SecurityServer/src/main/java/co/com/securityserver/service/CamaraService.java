@@ -6,6 +6,7 @@ import co.com.securityserver.dto.CamaraDTO;
 import co.com.securityserver.models.Camara;
 import co.com.securityserver.models.Usuario;
 import co.com.securityserver.repository.CamaraRepository;
+import co.com.securityserver.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,8 @@ public class CamaraService {
 
     @Autowired
     private UsuarioService usuarioService;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     public CamaraService(CamaraRepository camaraRepo, UsuarioService usuarioService) {
         this.camaraRepo = camaraRepo;
@@ -65,7 +68,7 @@ public class CamaraService {
 
     @Transactional
     public Camara updateCamara(CamaraDTO camaraDTO) {
-        if (camaraRepo.existsById(camaraDTO.getId()) && camaraRepo.existsById(camaraDTO.getId())) {
+        if (camaraRepo.existsById(camaraDTO.getId()) && usuarioRepository.existsById(camaraDTO.getId())) {
             CamaraSeguridadBuilder builder = new CamaraSeguridadBuilder(usuarioService);
             DirectorCamaraSeguridad director = new DirectorCamaraSeguridad(builder);
             Camara camara = director.ConstruirCamara(camaraDTO);

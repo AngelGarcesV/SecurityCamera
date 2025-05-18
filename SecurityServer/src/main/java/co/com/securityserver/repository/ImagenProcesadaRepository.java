@@ -5,8 +5,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface ImagenProcesadaRepository extends CrudRepository<ImagenProcesada, Long> {
 
     @Query(value = "SELECT IP FROM ImagenProcesada IP WHERE IP.imagen.id = :imagenId")
-    ImagenProcesada findByUsuarioId(@Param("imagenId") Long usuarioId);
+    Optional<List<ImagenProcesada>> findByImagenId(@Param("imagenId") Long usuarioId);
 }
