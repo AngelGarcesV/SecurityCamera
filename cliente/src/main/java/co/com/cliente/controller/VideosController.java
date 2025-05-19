@@ -37,55 +37,46 @@ public class VideosController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Crear o obtener el directorio de grabaciones
         recordingsDir = new File(System.getProperty("user.home") + "/security_camera_recordings");
         if (!recordingsDir.exists()) {
             recordingsDir.mkdirs();
         }
 
-        // Cargar los videos grabados
         loadRecordedVideos();
     }
 
     private void loadRecordedVideos() {
-        // Limpiar la cuadrícula
         videoGrid.getChildren().clear();
 
-        // Configurar la cuadrícula
         videoGrid.setHgap(10);
         videoGrid.setVgap(10);
         videoGrid.setPadding(new Insets(10));
 
         try {
-            // Obtener archivos de video
             File[] videoFiles = recordingsDir.listFiles((dir, name) ->
                     name.toLowerCase().endsWith(".mp4") ||
                             name.toLowerCase().endsWith(".avi") ||
                             name.toLowerCase().endsWith(".mov"));
 
             if (videoFiles == null || videoFiles.length == 0) {
-                // No hay videos disponibles, mostrar mensaje
                 Label noVideosLabel = new Label("No hay videos grabados disponibles.");
                 noVideosLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
                 videoGrid.add(noVideosLabel, 0, 0);
                 return;
             }
 
-            // Ordenar por fecha de modificación (más reciente primero)
             Arrays.sort(videoFiles, Comparator.comparing(File::lastModified).reversed());
 
-            // Añadir videos a la cuadrícula (máximo 6: 2 filas, 3 columnas)
             int row = 0;
             int col = 0;
             int count = 0;
 
             for (File videoFile : videoFiles) {
-                if (count >= 6) break; // Limitar a 6 videos
+                if (count >= 6) break;
 
                 VBox videoItem = createVideoThumbnail(videoFile);
                 videoGrid.add(videoItem, col, row);
 
-                // Actualizar posición
                 col++;
                 if (col >= 3) {
                     col = 0;
@@ -105,21 +96,17 @@ public class VideosController implements Initializable {
         VBox item = new VBox(5);
         item.setPrefSize(300, 200);
 
-        // Crear panel para la miniatura de video
         ImageView thumbnailView = new ImageView();
         thumbnailView.setFitWidth(300);
         thumbnailView.setFitHeight(170);
         thumbnailView.setPreserveRatio(true);
 
-        // Establecer una imagen por defecto (en una aplicación real, generarías miniaturas de los videos)
         thumbnailView.setStyle("-fx-background-color: #333333;");
 
-        // Información del video
         String title = videoFile.getName();
-        String duration = ""; // En una app real, calcularías la duración
+        String duration = "";
         String date = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new Date(videoFile.lastModified()));
 
-        // Panel de información
         HBox infoBox = new HBox();
         infoBox.setSpacing(5);
 
@@ -136,10 +123,8 @@ public class VideosController implements Initializable {
 
         infoBox.getChildren().addAll(titleLabel, spacer, dateLabel);
 
-        // Añadir elementos al contenedor
         item.getChildren().addAll(thumbnailView, infoBox);
 
-        // Manejar evento de clic para reproducir el video
         item.setOnMouseClicked(event -> playVideo(videoFile));
 
         return item;
@@ -147,7 +132,6 @@ public class VideosController implements Initializable {
 
     private void playVideo(File videoFile) {
         try {
-            // Abrir el video con la aplicación predeterminada del sistema
             java.awt.Desktop.getDesktop().open(videoFile);
         } catch (Exception e) {
             e.printStackTrace();
@@ -166,7 +150,6 @@ public class VideosController implements Initializable {
         });
     }
 
-    // Método para actualizar la vista de videos (puede ser llamado desde fuera)
     public void refreshVideos() {
         loadRecordedVideos();
     }

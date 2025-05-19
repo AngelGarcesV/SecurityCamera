@@ -18,7 +18,7 @@ public class Imagen {
     private String nombre;
     @Lob
     @Column(columnDefinition = "LONGBLOB")
-    private Byte[] imagen;
+    private byte[] imagen;
     private String resolucion;
     private Date fecha;
     @ManyToOne
@@ -35,7 +35,7 @@ public class Imagen {
     public Imagen() {
     }
 
-    public Imagen(Long id,String nombre,  Byte[] imagen, String resolucion, Date fecha, Camara camara,Usuario usuario) {
+    public Imagen(Long id,String nombre,  byte[] imagen, String resolucion, Date fecha, Camara camara,Usuario usuario) {
         this.id = id;
         this.nombre = nombre;
         this.imagen = imagen;

@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/videos")
+@RequestMapping("/api/video")
 @CrossOrigin(origins = "*")
 public class VideoController {
 
     @Autowired
     private VideoService videoService;
 
-@PostMapping
+@PostMapping("/save")
 public ResponseEntity<VideoDTO> createVideo(@RequestBody VideoDTO videoDTO) {
     Video savedVideo = videoService.saveVideo(videoDTO);
     return new ResponseEntity<>(VideoMapper.toVideoDTO(savedVideo), HttpStatus.CREATED);

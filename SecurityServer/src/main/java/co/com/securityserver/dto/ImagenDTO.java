@@ -12,7 +12,7 @@ import java.util.Date;
 public class ImagenDTO {
     private Long id;
     private String nombre;
-    private Byte[] imagen;
+    private byte[] imagen;
     private String resolucion;
     private Date fecha;
     private Long camaraId;
@@ -21,7 +21,7 @@ public class ImagenDTO {
     public ImagenDTO() {
     }
 
-    public ImagenDTO(Long id, String nombre, Byte[] imagen, String resolucion, Date fecha, Long camaraId, Long usuarioId) {
+    public ImagenDTO(Long id, String nombre, byte[] imagen, String resolucion, Date fecha, Long camaraId, Long usuarioId) {
         this.id = id;
         this.nombre = nombre;
         this.imagen = imagen;

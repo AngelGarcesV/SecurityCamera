@@ -10,14 +10,14 @@ public class ImagenProcesadaDTO {
     private Long id;
     private String nombre;
     private String resolucion;
-    private Byte[] imagenEditada;
+    private byte[] imagenEditada;
     private Date fecha;
     private Long imagenId;
 
     public ImagenProcesadaDTO() {
     }
 
-    public ImagenProcesadaDTO(Long id, String nombre, String resolucion, Byte[] imagenEditada, Date fecha, Long imagenId) {
+    public ImagenProcesadaDTO(Long id, String nombre, String resolucion, byte[] imagenEditada, Date fecha, Long imagenId) {
         this.id = id;
         this.nombre = nombre;
         this.resolucion = resolucion;

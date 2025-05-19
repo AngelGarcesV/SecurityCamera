@@ -17,7 +17,7 @@ public class ImagenProcesada {
     private String resolucion;
     @Lob
     @Column(columnDefinition = "LONGBLOB")
-    private Byte[] imagenEditada;
+    private byte[] imagenEditada;
     private Date fecha;
     @ManyToOne
     @JoinColumn(name = "imagen_id", nullable = false)
@@ -26,7 +26,7 @@ public class ImagenProcesada {
     public ImagenProcesada() {
     }
 
-    public ImagenProcesada(String nombre, String resolucion, Byte[] imagenEditada, Date fecha, Imagen imagen) {
+    public ImagenProcesada(String nombre, String resolucion, byte[] imagenEditada, Date fecha, Imagen imagen) {
         this.nombre = nombre;
         this.resolucion = resolucion;
         this.imagenEditada = imagenEditada;

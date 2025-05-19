@@ -14,9 +14,16 @@ module co.com.cliente {
     requires javafx.media;
     requires opencv;
     requires java.desktop;
+    requires com.fasterxml.jackson.databind;
+    requires org.json;
 
     opens co.com.cliente to javafx.fxml;
     exports co.com.cliente;
     exports co.com.cliente.controller;
     opens co.com.cliente.controller to javafx.fxml;
+    exports co.com.cliente.httpRequest;
+    exports co.com.cliente.dto;
+    opens co.com.cliente.dto to com.fasterxml.jackson.databind;
+
+    opens co.com.cliente.httpRequest to javafx.fxml;
 }

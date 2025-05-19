@@ -10,7 +10,7 @@ public class VideoDTO {
     private Long id;
     private String nombre;
     private Date fecha;
-    private Byte[] video;
+    private byte[] video;
     private String duracion;
     private Long camaraId;
     private Long usuarioId;
@@ -18,7 +18,7 @@ public class VideoDTO {
     public VideoDTO() {
     }
 
-    public VideoDTO(Long id, String nombre, Date fecha, Byte[] video, String duracion, Long camaraId, Long usuarioId) {
+    public VideoDTO(Long id, String nombre, Date fecha, byte[] video, String duracion, Long camaraId, Long usuarioId) {
         this.id = id;
         this.nombre = nombre;
         this.fecha = fecha;

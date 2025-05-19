@@ -132,7 +132,11 @@
             <artifactId>opencv</artifactId>
             <version>4.7.0-0</version> <!-- La versión más reciente disponible en Maven Central -->
         </dependency>
-
+        <!-- JavaFX Base para la interfaz gráfica --><dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20240303</version>
+        </dependency>
         <!-- JavaFX Media para la reproducción de video -->
         <dependency>
             <groupId>org.openjfx</groupId>
