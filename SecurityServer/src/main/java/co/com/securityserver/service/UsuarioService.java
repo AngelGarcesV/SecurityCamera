@@ -57,7 +57,14 @@ public class UsuarioService {
     public Usuario updateUsuario(Usuario infoUsuario) {
         Usuario userSearch = userRepo.findByCorreo(infoUsuario.getCorreo()).orElse(null);
         if (userRepo.existsById(infoUsuario.getId())  && (userSearch == null || (Objects.equals(userSearch.getId(), infoUsuario.getId())))){
-            infoUsuario.setPassword(this.hashPassword(infoUsuario.getPassword()));
+            if (infoUsuario.getPassword() != null && !infoUsuario.getPassword().isEmpty()) {
+                infoUsuario.setPassword(this.hashPassword(infoUsuario.getPassword()));
+            } else {
+                // Conservar la contraseña actual si no se envía una nueva
+                Usuario actual = userRepo.findById(infoUsuario.getId()).orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+                infoUsuario.setPassword(actual.getPassword());
+            }
             return userRepo.save(infoUsuario);
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado, o el correo ya esta registrado");

@@ -58,7 +58,7 @@ function EditarUsuario() {
 
         try {
             // Modificado para usar el endpoint correcto
-            await api.put(`/usuario/${seleccionado.id}`, formData);
+            await api.put("/usuario/update", { ...formData, id: seleccionado.id });
             setMessage({ text: "Usuario actualizado con éxito", type: "success" });
             setSeleccionado(null);
             setFormData({ nombre: "", correo: "", rol: "user" });

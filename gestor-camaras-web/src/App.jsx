@@ -1,37 +1,42 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import AppLayout from "./components/AppLayout";
-import Camaras from "./pages/Camaras";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
 import Reportes from "./pages/Reportes";
+import Camaras from "./pages/Camaras";
 import Mapa from "./pages/Mapa";
 import Usuarios from "./pages/usuarios/Usuarios";
-import Login from "./pages/Login";
-import '@/styles/layout.css';
+import CrearUsuario from "./pages/usuarios/CrearUsuario";
+import EditarUsuario from "./pages/usuarios/EditarUsuario";
+import EliminarUsuario from "./pages/usuarios/EliminarUsuario";
+import VerUsuarios from "./pages/usuarios/VerUsuarios";
+import AppLayout from "./components/AppLayout";
 
 function App() {
-  const isAuthenticated = !!localStorage.getItem("token");
+    return (
+        <BrowserRouter>
+            <Routes>
+                {/* Ruta pública para login */}
+                <Route path="/" element={<Login />} />
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Página de login, sin layout */}
-        <Route path="/" element={<Login />} />
+                {/* Rutas protegidas dentro del layout */}
+                <Route path="/" element={<AppLayout />}>
+                    <Route path="reportes" element={<Reportes />} />
+                    <Route path="camaras" element={<Camaras />} />
+                    <Route path="ubicacion" element={<Mapa />} />
 
-        {/* Rutas protegidas con layout */}
-        {isAuthenticated ? (
-          <Route element={<AppLayout />}>
-            <Route path="/reportes" element={<Reportes />} />
-            <Route path="/camaras" element={<Camaras />} />
-            <Route path="/ubicacion" element={<Mapa />} />
-            <Route path="/usuarios/*" element={<Usuarios />} />
-          </Route>
-        ) : (
-          // Si no está autenticado, redirigir cualquier otra ruta a login
-          <Route path="*" element={<Navigate to="/" />} />
-        )}
-      </Routes>
-    </BrowserRouter>
-  );
+                    {/* Rutas anidadas para usuarios */}
+                    <Route path="usuarios" element={<Usuarios />}>
+                        <Route path="crear" element={<CrearUsuario />} />
+                        <Route path="ver" element={<VerUsuarios />} />
+                        <Route path="editar" element={<EditarUsuario />} />
+                        <Route path="eliminar" element={<EliminarUsuario />} />
+                    </Route>
+                </Route>
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;
+
+
 
