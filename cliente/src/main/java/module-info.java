@@ -16,6 +16,7 @@ module co.com.cliente {
     requires java.desktop;
     requires com.fasterxml.jackson.databind;
     requires org.json;
+    requires redis.clients.jedis;
 
     opens co.com.cliente to javafx.fxml;
     exports co.com.cliente;

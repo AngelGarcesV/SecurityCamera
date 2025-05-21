@@ -20,43 +20,50 @@ public class VideoController {
     @Autowired
     private VideoService videoService;
 
-@PostMapping("/save")
-public ResponseEntity<VideoDTO> createVideo(@RequestBody VideoDTO videoDTO) {
-    Video savedVideo = videoService.saveVideo(videoDTO);
-    return new ResponseEntity<>(VideoMapper.toVideoDTO(savedVideo), HttpStatus.CREATED);
-}
+    @PostMapping("/save")
+    public ResponseEntity<VideoDTO> createVideo(@RequestBody VideoDTO videoDTO) {
+        Video savedVideo = videoService.saveVideo(videoDTO);
+        return new ResponseEntity<>(VideoMapper.toVideoDTO(savedVideo), HttpStatus.CREATED);
+    }
 
-@GetMapping("/{id}")
-public ResponseEntity<VideoDTO> getVideoById(@PathVariable Long id) {
-    Video video = videoService.GetVideoById(id);
-    return new ResponseEntity<>(VideoMapper.toVideoDTO(video), HttpStatus.OK);
-}
+    @GetMapping("/{id}")
+    public ResponseEntity<VideoDTO> getVideoById(@PathVariable Long id) {
+        Video video = videoService.GetVideoById(id);
+        return new ResponseEntity<>(VideoMapper.toVideoDTO(video), HttpStatus.OK);
+    }
 
-@GetMapping
-public ResponseEntity<List<VideoDTO>> getAllVideos() {
-    List<VideoDTO> videoDTOs = videoService.getAllVideos().stream()
-            .map(VideoMapper::toVideoDTO)
-            .collect(Collectors.toList());
-    return new ResponseEntity<>(videoDTOs, HttpStatus.OK);
-}
+    @GetMapping
+    public ResponseEntity<List<VideoDTO>> getAllVideos() {
+        List<VideoDTO> videoDTOs = videoService.getAllVideos().stream()
+                .map(VideoMapper::toVideoDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(videoDTOs, HttpStatus.OK);
+    }
 
-@PutMapping("/update")
-public ResponseEntity<VideoDTO> updateVideo( @RequestBody VideoDTO videoDTO) {
-    Video updatedVideo = videoService.updateVideo(videoDTO);
-    return new ResponseEntity<>(VideoMapper.toVideoDTO(updatedVideo), HttpStatus.OK);
-}
+    @PutMapping("/update")
+    public ResponseEntity<VideoDTO> updateVideo( @RequestBody VideoDTO videoDTO) {
+        Video updatedVideo = videoService.updateVideo(videoDTO);
+        return new ResponseEntity<>(VideoMapper.toVideoDTO(updatedVideo), HttpStatus.OK);
+    }
 
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> deleteVideo(@PathVariable Long id) {
-    videoService.deleteVideoById(id);
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-}
+    @DeleteMapping("/{id}")
+    public boolean deleteVideo(@PathVariable Long id) {
+        return videoService.deleteVideoById(id);
+    }
 
-@GetMapping("/camara/{camaraId}")
-public ResponseEntity<List<VideoDTO>> getVideosByCamaraId(@PathVariable Long camaraId) {
-    List<VideoDTO> videoDTOs = videoService.GetVideosByCamaraId(camaraId).stream()
-            .map(VideoMapper::toVideoDTO)
-            .collect(Collectors.toList());
-    return new ResponseEntity<>(videoDTOs, HttpStatus.OK);
-}
+    @GetMapping("/camara/{camaraId}")
+    public ResponseEntity<List<VideoDTO>> getVideosByCamaraId(@PathVariable Long camaraId) {
+        List<VideoDTO> videoDTOs = videoService.GetVideosByCamaraId(camaraId).stream()
+                .map(VideoMapper::toVideoDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(videoDTOs, HttpStatus.OK);
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<VideoDTO>> getVideosByUsuarioId(@PathVariable Long usuarioId) {
+        List<VideoDTO> videoDTOs = videoService.GetVideosByUsuarioId(usuarioId).stream()
+                .map(VideoMapper::toVideoDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(videoDTOs, HttpStatus.OK);
+    }
 }

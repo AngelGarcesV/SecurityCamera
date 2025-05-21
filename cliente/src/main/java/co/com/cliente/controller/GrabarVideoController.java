@@ -1,5 +1,6 @@
 package co.com.cliente.controller;
 
+import co.com.cliente.Main;
 import co.com.cliente.dto.CamaraDTO;
 import co.com.cliente.httpRequest.HttpService;
 import javafx.application.Platform;
@@ -131,6 +132,9 @@ public class GrabarVideoController implements Initializable {
     // Método para establecer la cámara seleccionada
     public void setCamara(CamaraDTO camara) {
         this.selectedCamara = camara;
+
+        // Registrar este controlador como activo en la aplicación principal
+        Main.setActiveVideoController(this);
 
         // Mostrar información de la cámara seleccionada
         Platform.runLater(() -> {
@@ -530,6 +534,16 @@ public class GrabarVideoController implements Initializable {
         }
     }
 
+    // Método público para que Main.java pueda detener la grabación y guardarla
+    public void stopAndSaveRecording() {
+        if (isRecording) {
+            Platform.runLater(() -> {
+                statusValue.setText("Terminando grabación por cierre de aplicación...");
+            });
+            stopRecording();
+        }
+    }
+
     private void saveVideoToServer(String duration) {
         if (currentVideoFileName.isEmpty() || !new File(currentVideoFileName).exists()) {
             showAlert(AlertType.ERROR, "Error", "No se encuentra el archivo de video para subir al servidor.");
@@ -538,30 +552,34 @@ public class GrabarVideoController implements Initializable {
 
         new Thread(() -> {
             try {
-                // Crear el objeto JSON con metadatos (sin incluir aún el video)
+                // Crear el objeto JSON con metadatos
                 String videoName = "Video_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
                 SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                 Date now = new Date();
 
-                // Extraer un frame del video como miniatura
+                // Obtener el archivo de video
                 File videoFile = new File(currentVideoFileName);
 
-                // Generar miniatura del video para enviar en lugar del video completo
-                VideoCapture videoCapture = new VideoCapture(currentVideoFileName);
-                Mat firstFrame = new Mat();
-                videoCapture.read(firstFrame);
+                // Notificar al usuario que estamos procesando el video
+                Platform.runLater(() -> {
+                    statusValue.setText("Procesando video...");
+                    addRecentActivity("🔄", "Preparando video para el servidor...", "just now");
+                });
 
-                MatOfByte buffer = new MatOfByte();
-                Imgcodecs.imencode(".jpg", firstFrame, buffer);
-                String thumbnailBase64 = Base64.getEncoder().encodeToString(buffer.toArray());
+                // Leer el archivo de video y convertirlo a base64
+                byte[] videoBytes = Files.readAllBytes(videoFile.toPath());
+                String videoBase64 = Base64.getEncoder().encodeToString(videoBytes);
 
-                videoCapture.release();
-                firstFrame.release();
+                // Actualizar estado
+                Platform.runLater(() -> {
+                    statusValue.setText("Enviando video al servidor...");
+                    addRecentActivity("🔄", "Enviando video al servidor...", "just now");
+                });
 
                 // Crear el objeto JSON para enviar al servidor
                 JSONObject jsonRequest = new JSONObject();
                 jsonRequest.put("nombre", videoName);
-                jsonRequest.put("video", thumbnailBase64); // Enviamos solo la miniatura como representación
+                jsonRequest.put("video", videoBase64); // Enviamos el video completo en base64
                 jsonRequest.put("duracion", duration);
                 jsonRequest.put("fecha", isoFormat.format(now));
                 jsonRequest.put("camaraId", selectedCamara.getId());
@@ -572,14 +590,23 @@ public class GrabarVideoController implements Initializable {
 
                 Platform.runLater(() -> {
                     statusValue.setText("Online");
-                    addRecentActivity("🎥", "Video guardado localmente", "just now");
+                    addRecentActivity("🎥", "Video guardado en servidor", "just now");
 
                     showAlert(Alert.AlertType.INFORMATION, "Grabación Completada",
-                            "La grabación ha sido guardada localmente en:\n" + currentVideoFileName +
-                                    "\n\nNota: Debido a limitaciones del servidor, solo se ha enviado una miniatura" +
-                                    " representativa del video. El video completo está disponible localmente.");
+                            "La grabación ha sido guardada localmente y enviada al servidor con éxito.\n" +
+                                    "Archivo local: " + currentVideoFileName);
                 });
 
+            } catch (OutOfMemoryError e) {
+                // Error por tamaño de archivo demasiado grande
+                e.printStackTrace();
+                Platform.runLater(() -> {
+                    statusValue.setText("Online");
+                    showAlert(AlertType.ERROR, "Error de memoria",
+                            "El archivo de video es demasiado grande para enviarlo directamente.\n" +
+                                    "Puedes intentar con una grabación más corta o de menor resolución.\n\n" +
+                                    "El video ha sido guardado localmente en: " + currentVideoFileName);
+                });
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> {
@@ -656,5 +683,13 @@ public class GrabarVideoController implements Initializable {
         if (frame != null) {
             frame.release();
         }
+
+        // Eliminar esta instancia como controlador activo
+        Main.clearActiveVideoController();
+    }
+
+    // Método público para verificar si hay una grabación en curso
+    public boolean isRecording() {
+        return isRecording;
     }
 }
