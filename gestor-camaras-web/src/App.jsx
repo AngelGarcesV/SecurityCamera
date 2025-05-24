@@ -8,6 +8,7 @@ import CrearUsuario from "./pages/usuarios/CrearUsuario";
 import EditarUsuario from "./pages/usuarios/EditarUsuario";
 import EliminarUsuario from "./pages/usuarios/EliminarUsuario";
 import VerUsuarios from "./pages/usuarios/VerUsuarios";
+import Galeria from "./pages/Galeria"; // ✅ Agregado
 import AppLayout from "./components/AppLayout";
 
 function App() {
@@ -16,20 +17,17 @@ function App() {
             <Routes>
                 {/* Ruta pública para login */}
                 <Route path="/" element={<Login />} />
-
                 {/* Rutas protegidas dentro del layout */}
                 <Route path="/" element={<AppLayout />}>
                     <Route path="reportes" element={<Reportes />} />
                     <Route path="camaras" element={<Camaras />} />
                     <Route path="ubicacion" element={<Mapa />} />
-
-                    {/* Rutas anidadas para usuarios */}
-                    <Route path="usuarios" element={<Usuarios />}>
-                        <Route path="crear" element={<CrearUsuario />} />
-                        <Route path="ver" element={<VerUsuarios />} />
-                        <Route path="editar" element={<EditarUsuario />} />
-                        <Route path="eliminar" element={<EliminarUsuario />} />
-                    </Route>
+                    <Route path="usuarios" element={<Usuarios />} />
+                    <Route path="usuarios/crear" element={<CrearUsuario />} />
+                    <Route path="usuarios/editar" element={<EditarUsuario />} />
+                    <Route path="usuarios/eliminar" element={<EliminarUsuario />} />
+                    <Route path="usuarios/ver" element={<VerUsuarios />} />
+                    <Route path="camaras/:id/galeria" element={<Galeria />} /> {/* ✅ Nueva ruta */}
                 </Route>
             </Routes>
         </BrowserRouter>

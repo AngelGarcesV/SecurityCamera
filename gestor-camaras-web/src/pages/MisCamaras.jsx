@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../axiosConfig";
+import { useNavigate } from "react-router-dom";
 
 function MisCamaras() {
   const [camaras, setCamaras] = useState([]);

@@ -1,13 +1,14 @@
-// Camaras.jsx (modo pruebas con JSON)
 import { useEffect, useState } from "react";
-import '@/styles/layout.css';
-import '@/styles/camaras.css';
+import { useNavigate } from "react-router-dom"; // ✅ Importar
+import "@/styles/layout.css";
+import "@/styles/camaras.css";
 
 function Camaras() {
   const [camaras, setCamaras] = useState([]);
+  const navigate = useNavigate(); // ✅ Instanciar el hook
 
   useEffect(() => {
-    // Datos de prueba
+// Datos de prueba
     const datosPrueba = [
       {
         id: 1,
@@ -31,23 +32,21 @@ function Camaras() {
         coordenadaY: -74.08,
       }
     ];
-
     // Simula respuesta asincrónica
     setTimeout(() => setCamaras(datosPrueba), 500);
   }, []);
 
   return (
-    <div className="main-content">
-      <div className="page-header">
-        <div>
-          <h2 className="page-title">Mis Cámaras</h2>
-          <p className="page-subtitle">Listado de cámaras registradas</p>
+      <div className="main-content">
+        <div className="page-header">
+          <div>
+            <h2 className="page-title">Mis Cámaras</h2>
+            <p className="page-subtitle">Listado de cámaras registradas</p>
+          </div>
         </div>
-      </div>
-
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
             <tr>
               <th>Nombre</th>
               <th>Dirección</th>
@@ -55,23 +54,28 @@ function Camaras() {
               <th>Coordenada Y</th>
               <th>Acciones</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             {camaras.map((cam) => (
-              <tr key={cam.id}>
-                <td>{cam.nombre}</td>
-                <td>{cam.direccion}</td>
-                <td>{cam.coordenadaX}</td>
-                <td>{cam.coordenadaY}</td>
-                <td>
-                  <button className="button-primary">Ver</button>
-                </td>
-              </tr>
+                <tr key={cam.id}>
+                  <td>{cam.nombre}</td>
+                  <td>{cam.direccion}</td>
+                  <td>{cam.coordenadaX}</td>
+                  <td>{cam.coordenadaY}</td>
+                  <td>
+                    <button
+                        className="button-primary"
+                        onClick={() => navigate(`/camaras/${cam.id}/galeria`)} // ✅ Aquí se redirige
+                    >
+                      Ver
+                    </button>
+                  </td>
+                </tr>
             ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
   );
 }
 
