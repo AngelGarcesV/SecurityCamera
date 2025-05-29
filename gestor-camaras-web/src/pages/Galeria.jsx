@@ -1,42 +1,36 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import api from "../axiosConfig";
 import "@/styles/galeria.css";
 
 function Galeria() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [camara, setCamara] = useState(null);
     const [imagenes, setImagenes] = useState([]);
     const [videos, setVideos] = useState([]);
     const [imagenesProcesadas, setImagenesProcesadas] = useState([]);
 
     useEffect(() => {
-// 🔧 Datos de prueba simulados
-        const camaraDummy = {
-            id,
-            nombre: "Cámara Principal de Entrada",
+        const fetchData = async () => {
+            try {
+                const resCam = await api.get(`/camaras/${id}`);
+                const resImg = await api.get(`/imagenes/camara/${id}`);
+                const resVid = await api.get(`/videos/camara/${id}`);
+                const resProc = await api.get(`/imagenesProcesadas/camara/${id}`);
+
+                setCamara(resCam.data);
+                setImagenes(resImg.data);
+                setVideos(resVid.data);
+                setImagenesProcesadas(resProc.data);
+            } catch (error) {
+                console.error("Error al cargar la galería:", error);
+                navigate("/camaras");
+            }
         };
-        const imagenesDummy = [
-            { id: 1, url: "https://via.placeholder.com/300x200?text=Imagen+1" },
-            { id: 2, url: "https://via.placeholder.com/300x200?text=Imagen+2" },
-        ];
 
-        const videosDummy = [
-            { id: 1, url: "https://www.w3schools.com/html/mov_bbb.mp4" },
-            { id: 2, url: "https://www.w3schools.com/html/movie.mp4" },
-        ];
-
-        const imagenesProcesadasDummy = [
-            { id: 1, url: "https://via.placeholder.com/300x200?text=Procesada+1" },
-            { id: 2, url: "https://via.placeholder.com/300x200?text=Procesada+2" },
-        ];
-
-        setTimeout(() => {
-            setCamara(camaraDummy);
-            setImagenes(imagenesDummy);
-            setVideos(videosDummy);
-            setImagenesProcesadas(imagenesProcesadasDummy);
-        }, 300);
-    }, [id]);
+        void fetchData();
+    }, [id, navigate]);
 
     if (!camara) return <div className="loading">Cargando galería...</div>;
 
@@ -44,6 +38,7 @@ function Galeria() {
         <div className="main-content">
             <h2 className="page-title">Galería - {camara.nombre}</h2>
             <p className="page-subtitle">Multimedia registrada de la cámara</p>
+
             <div className="galeria-seccion">
                 <h3>Imágenes</h3>
                 {imagenes.length > 0 ? (
@@ -87,6 +82,3 @@ function Galeria() {
 }
 
 export default Galeria;
-
-
-

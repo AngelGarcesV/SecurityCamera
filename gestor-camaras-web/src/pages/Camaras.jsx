@@ -1,39 +1,24 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ Importar
+import { useNavigate } from "react-router-dom";
+import api from "../axiosConfig"; // Asegúrate de que la ruta sea correcta
 import "@/styles/layout.css";
 import "@/styles/camaras.css";
 
 function Camaras() {
   const [camaras, setCamaras] = useState([]);
-  const navigate = useNavigate(); // ✅ Instanciar el hook
+  const navigate = useNavigate();
 
   useEffect(() => {
-// Datos de prueba
-    const datosPrueba = [
-      {
-        id: 1,
-        nombre: "Cámara Principal",
-        direccion: "Calle 123 #45-67",
-        coordenadaX: 4.653,
-        coordenadaY: -74.083,
-      },
-      {
-        id: 2,
-        nombre: "Cámara Entrada",
-        direccion: "Carrera 10 #25-30",
-        coordenadaX: 4.657,
-        coordenadaY: -74.078,
-      },
-      {
-        id: 3,
-        nombre: "Cámara Parqueadero",
-        direccion: "Av. Las Palmas #8-15",
-        coordenadaX: 4.66,
-        coordenadaY: -74.08,
+    const fetchCamaras = async () => {
+      try {
+        const response = await api.get("/camaras");
+        setCamaras(response.data);
+      } catch (error) {
+        console.error("Error al cargar las cámaras:", error);
       }
-    ];
-    // Simula respuesta asincrónica
-    setTimeout(() => setCamaras(datosPrueba), 500);
+    };
+
+    fetchCamaras();
   }, []);
 
   return (
@@ -65,7 +50,7 @@ function Camaras() {
                   <td>
                     <button
                         className="button-primary"
-                        onClick={() => navigate(`/camaras/${cam.id}/galeria`)} // ✅ Aquí se redirige
+                        onClick={() => navigate(`/camaras/${cam.id}/galeria`)}
                     >
                       Ver
                     </button>
@@ -80,3 +65,4 @@ function Camaras() {
 }
 
 export default Camaras;
+
