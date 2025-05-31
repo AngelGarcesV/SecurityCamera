@@ -27,9 +27,6 @@ public class ApplicationController implements Initializable {
     private AnchorPane grabarVideoOption;
 
     @FXML
-    private AnchorPane editarFotosOption;
-
-    @FXML
     private Label titleLabel;
 
     @FXML
@@ -40,7 +37,7 @@ public class ApplicationController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        optionPanes = new AnchorPane[]{videosOption, fotosOption, grabarVideoOption, editarFotosOption};
+        optionPanes = new AnchorPane[]{videosOption, fotosOption, grabarVideoOption};
 
         updateSelection(0);
     }
@@ -55,8 +52,6 @@ public class ApplicationController implements Initializable {
             updateSelection(1);
         } else if (clickedPane.equals(grabarVideoOption)) {
             updateSelection(2);
-        } else if (clickedPane.equals(editarFotosOption)) {
-            updateSelection(3);
         }
     }
 
@@ -85,9 +80,6 @@ public class ApplicationController implements Initializable {
             case 2:
                 title = "GRABAR VIDEO";
                 break;
-            case 3:
-                title = "EDITAR FOTOS";
-                break;
             default:
                 title = "VIDEOS";
                 break;
@@ -114,9 +106,6 @@ public class ApplicationController implements Initializable {
                 // Cambiamos la ruta para que cargue la vista de selección de cámara primero
                 fxmlPath = "/co/com/cliente/views/select-camara-view.fxml";
                 break;
-            case 3:
-                fxmlPath = "/co/com/cliente/views/editar-fotos-view.fxml";
-                break;
             default:
                 fxmlPath = "/co/com/cliente/views/videos-view.fxml";
                 break;
@@ -132,6 +121,24 @@ public class ApplicationController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "No se pudo cargar la vista: " + e.getMessage());
+        }
+    }
+
+    // Método público para cargar la vista de editar fotos desde FotosController
+    public void loadEditarFotosView() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
+            Parent view = loader.load();
+
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(view);
+
+            // Actualizar el título
+            titleLabel.setText("EDITAR FOTOS");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo cargar la vista de edición: " + e.getMessage());
         }
     }
 

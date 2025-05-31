@@ -17,6 +17,9 @@ module co.com.cliente {
     requires com.fasterxml.jackson.databind;
     requires org.json;
     requires redis.clients.jedis;
+    requires com.auth0.jwt;
+    requires java.logging;
+    requires imgscalr.lib;
 
     opens co.com.cliente to javafx.fxml;
     exports co.com.cliente;

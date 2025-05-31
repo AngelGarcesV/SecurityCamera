@@ -30,7 +30,7 @@ public class SelectCamaraController implements Initializable {
     @FXML
     private Label errorLabel;
 
-    private static final String API_BASE_URL = "http://localhost:9000/api/camara/usuario/2";
+    private static final String API_BASE_URL = "http://localhost:9000/api/camara/usuario/";
     private ObservableList<CamaraDTO> camaras = FXCollections.observableArrayList();
 
     @Override
@@ -61,7 +61,14 @@ public class SelectCamaraController implements Initializable {
 
     private void loadCamaras() {
         try {
-            String jsonResponse = HttpService.getInstance().sendGetRequest(API_BASE_URL);
+            String userId = HttpService.getInstance().getUserIdFromClaims();
+            System.out.println(userId);
+            if (userId == null || userId.isEmpty()) {
+                showError("No se pudo obtener el ID del usuario.");
+                return;
+            }
+
+            String jsonResponse = HttpService.getInstance().sendGetRequest(API_BASE_URL+ userId);
             List<CamaraDTO> camerasList = Arrays.asList(JsonResponseHandler.parseResponse(jsonResponse, CamaraDTO[].class));
             
             Platform.runLater(() -> {

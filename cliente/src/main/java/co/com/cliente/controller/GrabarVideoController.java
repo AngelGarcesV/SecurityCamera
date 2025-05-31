@@ -3,6 +3,7 @@ package co.com.cliente.controller;
 import co.com.cliente.Main;
 import co.com.cliente.dto.CamaraDTO;
 import co.com.cliente.httpRequest.HttpService;
+import com.auth0.jwt.interfaces.Claim;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -21,7 +22,9 @@ import org.json.JSONObject;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.VideoWriter;
 import org.opencv.videoio.Videoio;
@@ -35,7 +38,11 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -101,6 +108,12 @@ public class GrabarVideoController implements Initializable {
     // Variables para el control de tiempo de grabación
     private String currentRecordingDuration = "00:00:00";
     private String currentVideoFileName = "";
+
+    // Variables para grabación por segmentos
+    private Timer segmentTimer;
+    private int currentSegmentNumber = 0;
+    private String currentSessionId;
+    private boolean enableAutoUpload = true; // Configuración para habilitar/deshabilitar subida automática
 
     // Tamaño máximo de fragmento para subir videos (500KB)
     private static final int MAX_CHUNK_SIZE = 500 * 1024;
@@ -349,7 +362,10 @@ public class GrabarVideoController implements Initializable {
             jsonRequest.put("fecha", isoFormat.format(now));
 
             jsonRequest.put("camaraId", selectedCamara.getId());
-            jsonRequest.put("usuarioId", selectedCamara.getUsuarioId());
+            String userId = HttpService.getInstance().getUserIdFromClaims();
+            if(userId!= null){
+                jsonRequest.put("usuarioId",Integer.valueOf(userId));
+            }
 
             // Enviar la imagen al servidor en un hilo separado
             new Thread(() -> {
@@ -399,56 +415,213 @@ public class GrabarVideoController implements Initializable {
 
             if (fps <= 0) fps = 30.0;
 
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-            currentVideoFileName = recordingsDir.getAbsolutePath() + "/security_recording_" + timestamp + ".mp4";
+            // Generar un ID único para esta sesión de grabación
+            currentSessionId = UUID.randomUUID().toString();
+            currentSegmentNumber = 0;
 
-            try {
-                videoWriter = new VideoWriter(
-                        currentVideoFileName,
-                        VideoWriter.fourcc('X', 'V', 'I', 'D'),
-                        fps,
-                        new org.opencv.core.Size(width, height),
-                        true
-                );
+            // Crear el primer segmento
+            createNewVideoSegment(width, height, fps);
 
-                if (!videoWriter.isOpened()) {
-                    videoWriter.release();
-                    videoWriter = new VideoWriter(currentVideoFileName, VideoWriter.fourcc('M', 'J', 'P', 'G'),
-                            fps, new org.opencv.core.Size(width, height), true);
-                }
+            isRecording = true;
+            stopRecording.set(false);
+            recordingSeconds.set(0);
+            currentRecordingDuration = "00:00:00";
 
-                if (!videoWriter.isOpened()) {
-                    currentVideoFileName = recordingsDir.getAbsolutePath() + "/security_recording_" + timestamp + ".avi";
-                    videoWriter = new VideoWriter(currentVideoFileName, VideoWriter.fourcc('D', 'I', 'V', 'X'),
-                            fps, new org.opencv.core.Size(width, height), true);
-                }
+            recordBtn.setText("DETENER GRABACIÓN");
+            recordBtn.setStyle("-fx-background-color: #ea4335; -fx-text-fill: white;");
+            statusValue.setText("Grabando...");
 
-                if (!videoWriter.isOpened()) {
-                    throw new Exception("No se pudo crear el archivo de video con ningún formato compatible.");
-                }
+            startRecordingTimer();
 
-                isRecording = true;
-                stopRecording.set(false);
-                recordingSeconds.set(0);
-                currentRecordingDuration = "00:00:00";
-
-                recordBtn.setText("DETENER GRABACIÓN");
-                recordBtn.setStyle("-fx-background-color: #ea4335; -fx-text-fill: white;");
-                statusValue.setText("Grabando...");
-
-                startRecordingTimer();
-
-                System.out.println("Grabación iniciada: " + currentVideoFileName);
-
-            } catch (Exception e) {
-                showAlert(AlertType.ERROR, "Error de Grabación", "No se pudo iniciar la grabación: " + e.getMessage());
-                isRecording = false;
+            // Iniciar el timer para crear segmentos cada minuto
+            if (enableAutoUpload) {
+                startSegmentTimer();
             }
+
+            System.out.println("Grabación iniciada con segmentos automáticos cada minuto");
+
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(AlertType.ERROR, "Error de Grabación", "No se pudo iniciar la grabación: " + e.getMessage());
             isRecording = false;
         }
+    }
+
+    // Nuevo método para crear segmentos de video
+    private void createNewVideoSegment(int width, int height, double fps) {
+        try {
+            // Cerrar el segmento anterior si existe
+            if (videoWriter != null && videoWriter.isOpened()) {
+                videoWriter.release();
+            }
+
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+            currentVideoFileName = recordingsDir.getAbsolutePath() +
+                    "/segment_" + currentSessionId + "_" + String.format("%03d", currentSegmentNumber) +
+                    "_" + timestamp + ".mp4";
+
+            videoWriter = new VideoWriter(
+                    currentVideoFileName,
+                    VideoWriter.fourcc('X', 'V', 'I', 'D'),
+                    fps,
+                    new org.opencv.core.Size(width, height),
+                    true
+            );
+
+            if (!videoWriter.isOpened()) {
+                videoWriter.release();
+                videoWriter = new VideoWriter(currentVideoFileName, VideoWriter.fourcc('M', 'J', 'P', 'G'),
+                        fps, new org.opencv.core.Size(width, height), true);
+            }
+
+            if (!videoWriter.isOpened()) {
+                currentVideoFileName = recordingsDir.getAbsolutePath() +
+                        "/segment_" + currentSessionId + "_" + String.format("%03d", currentSegmentNumber) +
+                        "_" + timestamp + ".avi";
+                videoWriter = new VideoWriter(currentVideoFileName, VideoWriter.fourcc('D', 'I', 'V', 'X'),
+                        fps, new org.opencv.core.Size(width, height), true);
+            }
+
+            if (!videoWriter.isOpened()) {
+                throw new Exception("No se pudo crear el archivo de video con ningún formato compatible.");
+            }
+
+            System.out.println("Nuevo segmento creado: " + currentVideoFileName);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(AlertType.ERROR, "Error", "No se pudo crear nuevo segmento de video: " + e.getMessage());
+        }
+    }
+
+    // Nuevo método para iniciar el timer de segmentos
+    private void startSegmentTimer() {
+        segmentTimer = new Timer(true); // Timer daemon
+
+        segmentTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (isRecording) {
+                    Platform.runLater(() -> {
+                        processCurrentSegment();
+                    });
+                }
+            }
+        }, 60000, 60000); // Primer ejecución después de 1 minuto, luego cada minuto
+    }
+
+    // Nuevo método para procesar el segmento actual
+    private void processCurrentSegment() {
+        if (!isRecording) return;
+
+        try {
+            // Guardar el nombre del archivo actual
+            String completedSegmentFileName = currentVideoFileName;
+
+            // Cerrar el segmento actual
+            if (videoWriter != null && videoWriter.isOpened()) {
+                videoWriter.release();
+            }
+
+            // Verificar que el archivo existe y tiene contenido
+            File segmentFile = new File(completedSegmentFileName);
+            if (segmentFile.exists() && segmentFile.length() > 0) {
+
+                // Mostrar actividad en la UI
+                addRecentActivity("📤",
+                        "Enviando segmento " + (currentSegmentNumber + 1) + " al servidor...",
+                        "just now");
+
+                // Enviar el segmento completado al servidor en un hilo separado
+                sendSegmentToServer(completedSegmentFileName, currentSegmentNumber);
+            }
+
+            // Crear el siguiente segmento
+            currentSegmentNumber++;
+            int width = (int) capture.get(Videoio.CAP_PROP_FRAME_WIDTH);
+            int height = (int) capture.get(Videoio.CAP_PROP_FRAME_HEIGHT);
+            double fps = capture.get(Videoio.CAP_PROP_FPS);
+
+            if (width <= 0 || height <= 0) {
+                width = 1280;
+                height = 720;
+            }
+            if (fps <= 0) fps = 30.0;
+
+            createNewVideoSegment(width, height, fps);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error al procesar segmento: " + e.getMessage());
+
+            Platform.runLater(() -> {
+                addRecentActivity("❌",
+                        "Error al procesar segmento " + (currentSegmentNumber + 1),
+                        "just now");
+            });
+        }
+    }
+
+    // Nuevo método para enviar segmento al servidor
+    private void sendSegmentToServer(String segmentFileName, int segmentNumber) {
+        new Thread(() -> {
+            try {
+                File segmentFile = new File(segmentFileName);
+                if (!segmentFile.exists()) {
+                    System.err.println("El archivo de segmento no existe: " + segmentFileName);
+                    return;
+                }
+
+                // Comprimir el segmento
+                File compressedSegment = compressVideoWithOpenCV(segmentFile);
+
+                // Crear nombre descriptivo para el segmento
+                String segmentName = "Segmento_" + (segmentNumber + 1) + "_" +
+                        new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+
+                SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                Date segmentDate = new Date();
+
+                // Calcular duración del segmento (aproximadamente 1 minuto)
+                String segmentDuration = "00:01:00";
+
+                // Subir usando HttpService
+                String response = HttpService.getInstance().uploadVideoFile(
+                        "http://localhost:9000/api/video/upload",
+                        compressedSegment,
+                        segmentName,
+                        segmentDate,
+                        segmentDuration,
+                        selectedCamara.getId(),
+                        selectedCamara.getUsuarioId()
+                );
+
+                Platform.runLater(() -> {
+                    addRecentActivity("✅",
+                            "Segmento " + (segmentNumber + 1) + " enviado exitosamente",
+                            "just now");
+                });
+
+                // Opcional: Eliminar el archivo local del segmento después de subirlo exitosamente
+                // segmentFile.delete();
+                // if (!compressedSegment.equals(segmentFile)) {
+                //     compressedSegment.delete();
+                // }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+
+                Platform.runLater(() -> {
+                    addRecentActivity("❌",
+                            "Error al enviar segmento " + (segmentNumber + 1) + ": " + e.getMessage(),
+                            "just now");
+
+                    // Opcional: Mostrar alerta solo para errores críticos
+                    // showAlert(AlertType.WARNING, "Error de Subida",
+                    //     "No se pudo enviar el segmento al servidor: " + e.getMessage());
+                });
+            }
+        }).start();
     }
 
     private void startRecordingTimer() {
@@ -492,6 +665,12 @@ public class GrabarVideoController implements Initializable {
             isRecording = false;
             stopRecording.set(true);
 
+            // Detener el timer de segmentos
+            if (segmentTimer != null) {
+                segmentTimer.cancel();
+                segmentTimer = null;
+            }
+
             if (recordingThread != null) {
                 recordingThread.join(2000);
             }
@@ -501,32 +680,40 @@ public class GrabarVideoController implements Initializable {
                 timerThread.join(1000);
             }
 
+            // Procesar el último segmento antes de limpiar recursos
+            if (enableAutoUpload && currentVideoFileName != null && !currentVideoFileName.isEmpty()) {
+                // Cerrar el último segmento
+                if (videoWriter != null && videoWriter.isOpened()) {
+                    videoWriter.release();
+                }
+
+                // Verificar y enviar el último segmento
+                File lastSegmentFile = new File(currentVideoFileName);
+                if (lastSegmentFile.exists() && lastSegmentFile.length() > 0) {
+                    Platform.runLater(() -> {
+                        addRecentActivity("📤",
+                                "Enviando último segmento al servidor...",
+                                "just now");
+                    });
+
+                    sendSegmentToServer(currentVideoFileName, currentSegmentNumber);
+                }
+            }
+
             cleanupRecordingResources();
 
-            addRecentActivity("🛑", "Recording stopped", "just now");
+            addRecentActivity("🛑", "Grabación detenida - " + (currentSegmentNumber + 1) + " segmentos procesados", "just now");
 
             recordBtn.setText("Record");
             recordBtn.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white; -fx-font-weight: bold;");
 
-            // Guardar la duración final antes de resetear el timer
-            final String finalDuration = currentRecordingDuration;
-
             timerLabel.setText("00:00:00");
             statusValue.setText("Online");
 
-            // Verificar si el video existe y no está vacío
-            File videoFile = new File(currentVideoFileName);
-            if (videoFile.exists() && videoFile.length() > 0) {
-                // Mostrar mensaje de procesamiento
-                Platform.runLater(() -> {
-                    statusValue.setText("Procesando video...");
-                });
-
-                // Guardar localmente y enviar video optimizado al servidor
-                saveVideoToServer(finalDuration);
-            } else {
-                showAlert(AlertType.ERROR, "Error", "No se pudo guardar el video correctamente.");
-            }
+            // Mostrar resumen de la grabación
+            showAlert(Alert.AlertType.INFORMATION, "Grabación Completada",
+                    "Grabación finalizada con " + (currentSegmentNumber + 1) + " segmentos.\n" +
+                            "Los segmentos han sido enviados automáticamente al servidor.");
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -544,6 +731,102 @@ public class GrabarVideoController implements Initializable {
         }
     }
 
+    // Requiere dependencias de JavaCV
+    private File compressVideoWithOpenCV(File originalVideo) {
+        try {
+            // Crear directorio temporal para videos comprimidos
+            File compressedDir = new File(recordingsDir, "compressed");
+            if (!compressedDir.exists()) {
+                compressedDir.mkdirs();
+            }
+
+            // Nombre del archivo comprimido
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+            File compressedVideo = new File(compressedDir, "compressed_" + timestamp + ".mp4");
+
+            // Cargar el video original
+            VideoCapture capture = new VideoCapture(originalVideo.getAbsolutePath());
+
+            // Obtener propiedades del video original
+            int originalWidth = (int) capture.get(Videoio.CAP_PROP_FRAME_WIDTH);
+            int originalHeight = (int) capture.get(Videoio.CAP_PROP_FRAME_HEIGHT);
+            double originalFps = capture.get(Videoio.CAP_PROP_FPS);
+
+            // Configuraciones agresivas de compresión
+            int newWidth = 480;  // Reducir resolución más significativamente
+            int newHeight = (int) (originalHeight * ((double) newWidth / originalWidth));
+            double newFps = Math.min(originalFps, 15.0);  // Reducir FPS
+
+            // Configurar VideoWriter con configuraciones de compresión más agresivas
+            VideoWriter writer = new VideoWriter(
+                    compressedVideo.getAbsolutePath(),
+                    VideoWriter.fourcc('X', '2', '6', '4'),  // H.264
+                    newFps,
+                    new Size(newWidth, newHeight),
+                    true
+            );
+
+            // Leer y escribir frames con compresión
+            Mat frame = new Mat();
+            Mat resizedFrame = new Mat();
+            Mat compressedFrame = new Mat();
+            int frameCount = 0;
+            int skipFrames = Math.max(1, (int)(originalFps / newFps));
+
+            while (capture.read(frame)) {
+                // Saltar frames para reducir FPS
+                frameCount++;
+                if (frameCount % skipFrames != 0) continue;
+
+                // Redimensionar frame
+                Imgproc.resize(frame, resizedFrame, new Size(newWidth, newHeight));
+
+                // Aplicar compresión adicional
+                Imgproc.GaussianBlur(resizedFrame, compressedFrame, new Size(3, 3), 0);
+
+                writer.write(compressedFrame);
+            }
+
+            // Liberar recursos
+            capture.release();
+            writer.release();
+            frame.release();
+            resizedFrame.release();
+            compressedFrame.release();
+
+            // Verificar si se creó el video
+            if (compressedVideo.exists()) {
+                // Verificar información de compresión
+                long originalSize = originalVideo.length() / 1024;
+                long compressedSize = compressedVideo.length() / 1024;
+                double compressionRatio = (1 - (double)compressedSize / originalSize) * 100;
+
+                System.out.println("Archivo original: " + originalVideo.getName() +
+                        " - Tamaño: " + originalSize + " KB");
+                System.out.println("Archivo comprimido: " + compressedVideo.getName() +
+                        " - Tamaño: " + compressedSize + " KB");
+                System.out.println("Ratio de compresión: " + String.format("%.2f", compressionRatio) + "%");
+
+                // Si la compresión no es significativa, eliminar el archivo comprimido
+                if (compressionRatio < 5) {
+                    compressedVideo.delete();
+                    System.err.println("Compresión insignificante. Usando archivo original.");
+                    return originalVideo;
+                }
+
+                return compressedVideo;
+            } else {
+                System.err.println("Fallo en la compresión de video. Usando archivo original.");
+                return originalVideo;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error al comprimir video: " + e.getMessage());
+            return originalVideo;
+        }
+    }
+
+    // Método modificado para usar compresión antes de enviar
     private void saveVideoToServer(String duration) {
         if (currentVideoFileName.isEmpty() || !new File(currentVideoFileName).exists()) {
             showAlert(AlertType.ERROR, "Error", "No se encuentra el archivo de video para subir al servidor.");
@@ -552,13 +835,11 @@ public class GrabarVideoController implements Initializable {
 
         new Thread(() -> {
             try {
-                // Crear el objeto JSON con metadatos
-                String videoName = "Video_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-                SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                Date now = new Date();
-
-                // Obtener el archivo de video
+                // Preparar el archivo de video
                 File videoFile = new File(currentVideoFileName);
+
+                // Comprimir video antes de enviar
+                File compressedVideoFile = compressVideoWithOpenCV(videoFile);
 
                 // Notificar al usuario que estamos procesando el video
                 Platform.runLater(() -> {
@@ -566,9 +847,10 @@ public class GrabarVideoController implements Initializable {
                     addRecentActivity("🔄", "Preparando video para el servidor...", "just now");
                 });
 
-                // Leer el archivo de video y convertirlo a base64
-                byte[] videoBytes = Files.readAllBytes(videoFile.toPath());
-                String videoBase64 = Base64.getEncoder().encodeToString(videoBytes);
+                // Crear el nombre del video basado en la fecha
+                String videoName = "Video_" + new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+                SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                Date now = new Date();
 
                 // Actualizar estado
                 Platform.runLater(() -> {
@@ -576,17 +858,16 @@ public class GrabarVideoController implements Initializable {
                     addRecentActivity("🔄", "Enviando video al servidor...", "just now");
                 });
 
-                // Crear el objeto JSON para enviar al servidor
-                JSONObject jsonRequest = new JSONObject();
-                jsonRequest.put("nombre", videoName);
-                jsonRequest.put("video", videoBase64); // Enviamos el video completo en base64
-                jsonRequest.put("duracion", duration);
-                jsonRequest.put("fecha", isoFormat.format(now));
-                jsonRequest.put("camaraId", selectedCamara.getId());
-                jsonRequest.put("usuarioId", selectedCamara.getUsuarioId());
-
-                // Enviar al servidor
-                String response = HttpService.getInstance().sendPostRequest(API_SAVE_VIDEO_URL, jsonRequest.toString());
+                // Usar HttpService para subir el archivo comprimido
+                String response = HttpService.getInstance().uploadVideoFile(
+                        "http://localhost:9000/api/video/upload",  // URL de subida de video
+                        compressedVideoFile,
+                        videoName,
+                        now,
+                        duration,
+                        selectedCamara.getId(),
+                        selectedCamara.getUsuarioId()
+                );
 
                 Platform.runLater(() -> {
                     statusValue.setText("Online");
@@ -594,26 +875,17 @@ public class GrabarVideoController implements Initializable {
 
                     showAlert(Alert.AlertType.INFORMATION, "Grabación Completada",
                             "La grabación ha sido guardada localmente y enviada al servidor con éxito.\n" +
-                                    "Archivo local: " + currentVideoFileName);
+                                    "Archivo local: " + compressedVideoFile.getAbsolutePath());
                 });
 
-            } catch (OutOfMemoryError e) {
-                // Error por tamaño de archivo demasiado grande
-                e.printStackTrace();
-                Platform.runLater(() -> {
-                    statusValue.setText("Online");
-                    showAlert(AlertType.ERROR, "Error de memoria",
-                            "El archivo de video es demasiado grande para enviarlo directamente.\n" +
-                                    "Puedes intentar con una grabación más corta o de menor resolución.\n\n" +
-                                    "El video ha sido guardado localmente en: " + currentVideoFileName);
-                });
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> {
                     statusValue.setText("Online");
+
+                    // Mostrar alerta de error
                     showAlert(AlertType.ERROR, "Error al guardar en servidor",
-                            "No se pudo guardar el video en el servidor: " + e.getMessage() +
-                                    "\n\nEl video ha sido guardado localmente en: " + currentVideoFileName);
+                            "No se pudo guardar el video en el servidor: " + e.getMessage());
                 });
             }
         }).start();
@@ -671,6 +943,12 @@ public class GrabarVideoController implements Initializable {
             stopRecording();
         }
 
+        // Detener el timer de segmentos si está activo
+        if (segmentTimer != null) {
+            segmentTimer.cancel();
+            segmentTimer = null;
+        }
+
         cameraActive = false;
         if (cameraThread != null) {
             cameraThread.interrupt();
@@ -691,5 +969,14 @@ public class GrabarVideoController implements Initializable {
     // Método público para verificar si hay una grabación en curso
     public boolean isRecording() {
         return isRecording;
+    }
+
+    // Método opcional para configurar la subida automática
+    public void setAutoUploadEnabled(boolean enabled) {
+        this.enableAutoUpload = enabled;
+        if (!enabled && segmentTimer != null) {
+            segmentTimer.cancel();
+            segmentTimer = null;
+        }
     }
 }

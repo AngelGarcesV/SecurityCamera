@@ -5,17 +5,18 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxWidth="950.0" prefHeight="520.0" prefWidth="950.0" style="-fx-background-color: #f5f5f5;" xmlns="http://javafx.com/javafx/22-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.com.cliente.controller.GrabarVideoController">
+<BorderPane maxWidth="950.0" prefHeight="520.0" prefWidth="950.0" style="-fx-background-color: #f5f5f5;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.com.cliente.controller.GrabarVideoController">
    <top>
       <HBox prefWidth="950.0" spacing="15.0" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
          <children>
@@ -85,8 +86,8 @@
                         </Label>
                         <GridPane hgap="10.0" vgap="10.0">
                            <columnConstraints>
-                              <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                              <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" maxWidth="110.2000732421875" minWidth="10.0" prefWidth="70.99999237060547" />
+                              <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" maxWidth="159.00000762939453" minWidth="10.0" prefWidth="159.00000762939453" />
                            </columnConstraints>
                            <rowConstraints>
                               <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -95,84 +96,11 @@
                            </rowConstraints>
                            <children>
                               <Label text="Status" />
-                              <Label fx:id="statusValue" text="Online" textFill="#009900" GridPane.columnIndex="1" />
+                              <Label fx:id="statusValue" prefHeight="18.0" prefWidth="39.0" text="Online" textFill="#009900" GridPane.columnIndex="1" />
                               <Label text="Resolution" GridPane.rowIndex="1" />
                               <Label text="FPS" GridPane.rowIndex="2" />
                               <Label fx:id="resolutionValue" text="1080p" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label fx:id="fpsValue" text="30" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                           </children>
-                        </GridPane>
-                     </children>
-                  </VBox>
-                  <VBox spacing="15.0">
-                     <children>
-                        <Label text="Quick Actions">
-                           <font>
-                              <Font name="System Bold" size="16.0" />
-                           </font>
-                        </Label>
-                        <GridPane hgap="30.0" vgap="20.0">
-                           <columnConstraints>
-                              <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                              <javafx.scene.layout.ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                              <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <javafx.scene.layout.RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                           </rowConstraints>
-                           <children>
-                              <VBox fx:id="rotateAction" alignment="CENTER" onMouseClicked="#handleRotateAction" spacing="5.0">
-                                 <children>
-                                    <Label text="⟳">
-                                       <font>
-                                          <Font size="24.0" />
-                                       </font>
-                                       <textFill>
-                                          <Color blue="0.95" green="0.522" red="0.259" />
-                                       </textFill>
-                                    </Label>
-                                    <Label text="Rotate" />
-                                 </children>
-                              </VBox>
-                              <VBox fx:id="fullscreenAction" alignment="CENTER" onMouseClicked="#handleFullscreenAction" spacing="5.0" GridPane.columnIndex="1">
-                                 <children>
-                                    <Label text="⛶">
-                                       <font>
-                                          <Font size="24.0" />
-                                       </font>
-                                       <textFill>
-                                          <Color blue="0.95" green="0.522" red="0.259" />
-                                       </textFill>
-                                    </Label>
-                                    <Label text="Full Screen" />
-                                 </children>
-                              </VBox>
-                              <VBox fx:id="stopFeedAction" alignment="CENTER" onMouseClicked="#handleStopFeedAction" spacing="5.0" GridPane.rowIndex="1">
-                                 <children>
-                                    <Label text="⏹">
-                                       <font>
-                                          <Font size="24.0" />
-                                       </font>
-                                       <textFill>
-                                          <Color blue="0.95" green="0.522" red="0.259" />
-                                       </textFill>
-                                    </Label>
-                                    <Label text="Stop Feed" />
-                                 </children>
-                              </VBox>
-                              <VBox fx:id="recordingsAction" alignment="CENTER" onMouseClicked="#handleRecordingsAction" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                 <children>
-                                    <Label text="📁">
-                                       <font>
-                                          <Font size="24.0" />
-                                       </font>
-                                       <textFill>
-                                          <Color blue="0.95" green="0.522" red="0.259" />
-                                       </textFill>
-                                    </Label>
-                                    <Label text="Recordings" />
-                                 </children>
-                              </VBox>
                            </children>
                         </GridPane>
                      </children>

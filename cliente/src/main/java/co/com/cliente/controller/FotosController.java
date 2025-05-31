@@ -5,9 +5,11 @@ import co.com.cliente.httpRequest.HttpService;
 import co.com.cliente.httpRequest.JsonResponseHandler;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -21,6 +23,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -67,7 +70,12 @@ public class FotosController implements Initializable {
 
     private void loadImages() {
         try {
-            String jsonResponse = HttpService.getInstance().sendGetRequest(API_BASE_URL + "/usuario/2");
+            String userId = HttpService.getInstance().getUserIdFromClaims();
+            if (userId == null || userId.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "No se pudo obtener el ID del usuario.");
+                return;
+            }
+            String jsonResponse = HttpService.getInstance().sendGetRequest(API_BASE_URL + "/usuario/" + userId);
             currentImages = Arrays.asList(JsonResponseHandler.parseResponse(jsonResponse, ImagenDTO[].class));
             displayImages();
         } catch (Exception e) {
@@ -127,23 +135,31 @@ public class FotosController implements Initializable {
         nameLabel.setTextAlignment(TextAlignment.CENTER);
         nameLabel.setAlignment(Pos.CENTER);
 
-        // HBox para los botones
+        // HBox para los botones - ahora con 3 botones
         HBox buttonBox = new HBox();
-        buttonBox.setSpacing(5);
+        buttonBox.setSpacing(3);
         buttonBox.setAlignment(Pos.CENTER);
+
+        // Botón de editar foto
+        Button editButton = new Button("Editar");
+        editButton.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-size: 10px;");
+        editButton.setPrefWidth(60);
+        editButton.setOnAction(e -> openEditarFotosView(imagen));
 
         // Botón de actualizar
         Button updateButton = new Button("Actualizar");
-        updateButton.setStyle("-fx-background-color: #007bff; -fx-text-fill: white;");
+        updateButton.setStyle("-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-size: 10px;");
+        updateButton.setPrefWidth(60);
         updateButton.setOnAction(e -> showUpdateDialog(imagen));
 
         // Botón de eliminar
         Button deleteButton = new Button("Eliminar");
-        deleteButton.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
+        deleteButton.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 10px;");
+        deleteButton.setPrefWidth(60);
         deleteButton.setOnAction(e -> confirmAndDelete(imagen));
 
         // Agregar botones al HBox
-        buttonBox.getChildren().addAll(updateButton, deleteButton);
+        buttonBox.getChildren().addAll(editButton, updateButton, deleteButton);
 
         // Agregar todo al contenedor principal
         photoContainer.getChildren().addAll(photoItem, nameLabel, buttonBox);
@@ -184,6 +200,98 @@ public class FotosController implements Initializable {
                 });
             }
         });
+    }
+
+    private void openEditarFotosView(ImagenDTO imagen) {
+        try {
+            // Cargar la vista de editar fotos
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
+            Parent editView = loader.load();
+
+            // Obtener el controlador de la vista de edición
+            Object controller = loader.getController();
+
+            // Si el controlador tiene un método para establecer la imagen, llamarlo
+            if (controller != null) {
+                try {
+                    // Usar reflexión para llamar al método setImagenToEdit si existe
+                    controller.getClass().getMethod("setImagenToEdit", ImagenDTO.class).invoke(controller, imagen);
+                } catch (Exception e) {
+                    System.out.println("El controlador no tiene método setImagenToEdit: " + e.getMessage());
+                }
+            }
+
+            // Obtener el StackPane principal de la aplicación
+            StackPane contentArea = getContentArea();
+            if (contentArea != null) {
+                contentArea.getChildren().clear();
+                contentArea.getChildren().add(editView);
+
+                // Actualizar el título si es posible
+                updateTitle("EDITAR FOTOS");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo abrir la vista de edición: " + e.getMessage());
+        }
+    }
+
+    private StackPane getContentArea() {
+        try {
+            // Navegar por la jerarquía de nodos para encontrar el contentArea
+            Parent root = photoGrid.getScene().getRoot();
+            return findStackPane(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private StackPane findStackPane(Parent parent) {
+        if (parent instanceof StackPane && ((StackPane) parent).getId() != null &&
+                ((StackPane) parent).getId().equals("contentArea")) {
+            return (StackPane) parent;
+        }
+
+        for (var node : parent.getChildrenUnmodifiable()) {
+            if (node instanceof Parent) {
+                StackPane result = findStackPane((Parent) node);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void updateTitle(String title) {
+        try {
+            Parent root = photoGrid.getScene().getRoot();
+            Label titleLabel = findTitleLabel(root);
+            if (titleLabel != null) {
+                titleLabel.setText(title);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Label findTitleLabel(Parent parent) {
+        if (parent instanceof Label && ((Label) parent).getId() != null &&
+                ((Label) parent).getId().equals("titleLabel")) {
+            return (Label) parent;
+        }
+
+        for (var node : parent.getChildrenUnmodifiable()) {
+            if (node instanceof Parent) {
+                Label result = findTitleLabel((Parent) node);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
     }
 
     private void showUpdateDialog(ImagenDTO imagen) {

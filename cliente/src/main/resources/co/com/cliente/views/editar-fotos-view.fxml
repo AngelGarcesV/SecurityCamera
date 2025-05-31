@@ -3,6 +3,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -12,74 +14,139 @@
 
 <AnchorPane maxWidth="950.0" prefHeight="520.0" prefWidth="950.0" style="-fx-background-color: #f5f5f5;" xmlns="http://javafx.com/javafx/22-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.com.cliente.controller.EditarFotosController">
    <children>
-      <Label layoutX="20.0" layoutY="20.0" text="Editor de Fotos">
-         <font>
-            <Font name="System Bold" size="20.0" />
-         </font>
-      </Label>
-      <AnchorPane layoutX="20.0" layoutY="60.0" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #ddd; -fx-border-color: #bbb; -fx-border-width: 1;">
+      <!-- Contenedor principal horizontal -->
+      <HBox spacing="20.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
          <children>
-            <ImageView fx:id="photoPreview" fitHeight="380.0" fitWidth="580.0" layoutX="10.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true" />
-            <Label fx:id="placeholderLabel" alignment="CENTER" layoutX="150.0" layoutY="170.0" text="Seleccione una imagen para editar" textFill="#888888">
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Label>
-         </children>
-      </AnchorPane>
-      <VBox layoutX="650.0" layoutY="60.0" prefHeight="400.0" prefWidth="250.0" spacing="15.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-width: 1;">
-         <padding>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </padding>
-         <children>
-            <Label text="Herramientas de Edición">
-               <font>
-                  <Font name="System Bold" size="14.0" />
-               </font>
-            </Label>
-            <Button fx:id="selectImageBtn" onAction="#handleSelectImage" prefWidth="230.0" style="-fx-background-color: #4285f4; -fx-text-fill: white;" text="Seleccionar Imagen">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font>
-            </Button>
-            <VBox spacing="5.0">
+            <!-- Panel izquierdo - Imagen -->
+            <VBox prefHeight="480.0" prefWidth="600.0" spacing="10.0">
                <children>
-                  <Label text="Brillo" />
-                  <Slider fx:id="brightnessSlider" max="100.0" min="-100.0" prefWidth="230.0" />
+                  <Label text="Editor de Fotos" style="-fx-font-weight: bold; -fx-font-size: 24px;"/>
+
+                  <!-- Contenedor de la imagen -->
+                  <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="420.0" prefWidth="600.0" style="-fx-background: #e0e0e0; -fx-border-color: #ccc; -fx-border-width: 1;">
+                     <content>
+                        <AnchorPane fx:id="imageContainer" prefHeight="400.0" prefWidth="580.0" style="-fx-background-color: #e0e0e0;">
+                           <children>
+                              <ImageView fx:id="imageView" fitHeight="400.0" fitWidth="580.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                              <Label fx:id="placeholderLabel" alignment="CENTER" layoutX="190.0" layoutY="175.0" text="Seleccione una imagen para editar" textFill="#999999" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                 <font>
+                                    <Font size="16.0" />
+                                 </font>
+                              </Label>
+                           </children>
+                        </AnchorPane>
+                     </content>
+                  </ScrollPane>
                </children>
             </VBox>
-            <VBox spacing="5.0">
+
+            <!-- Panel derecho - Herramientas -->
+            <VBox prefHeight="480.0" prefWidth="300.0" spacing="15.0" style="-fx-background-color: white; -fx-padding: 20; -fx-border-color: #ddd; -fx-border-width: 1;">
                <children>
-                  <Label text="Contraste" />
-                  <Slider fx:id="contrastSlider" max="100.0" min="-100.0" prefWidth="230.0" />
-               </children>
-            </VBox>
-            <VBox spacing="5.0">
-               <children>
-                  <Label text="Saturación" />
-                  <Slider fx:id="saturationSlider" max="100.0" min="-100.0" prefWidth="230.0" />
-               </children>
-            </VBox>
-            <HBox spacing="10.0">
-               <children>
-                  <Button fx:id="applyBtn" onAction="#handleApplyEffects" prefWidth="110.0" style="-fx-background-color: #4285f4; -fx-text-fill: white;" text="Aplicar">
+                  <Label text="Herramientas de Edición" style="-fx-font-weight: bold; -fx-font-size: 18px;"/>
+
+                  <!-- Botón Seleccionar Imagen -->
+                  <Button fx:id="selectImageBtn" maxWidth="1.7976931348623157E308" onAction="#handleSelectImage" prefHeight="40.0" style="-fx-background-color: #4285f4; -fx-text-fill: white; -fx-font-weight: bold;" text="Seleccionar Imagen">
                      <font>
-                        <Font name="System Bold" size="12.0" />
+                        <Font size="14.0" />
                      </font>
                   </Button>
-                  <Button fx:id="resetBtn" onAction="#handleResetImage" prefWidth="110.0" style="-fx-background-color: #ea4335; -fx-text-fill: white;" text="Restablecer">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                  </Button>
+
+                  <!-- Controles de Brillo Mejorados -->
+                  <VBox spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-border-color: #dee2e6; -fx-border-width: 1; -fx-border-radius: 5;">
+                     <children>
+                        <Label text="Control de Brillo" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+                        <!-- Indicador de nivel de brillo -->
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <Label text="Nivel:" minWidth="40.0"/>
+                              <Label fx:id="brightnessLevelLabel" text="100%" style="-fx-font-weight: bold; -fx-text-fill: #007bff;" minWidth="50.0"/>
+                              <ProgressBar fx:id="brightnessProgressBar" prefWidth="100.0" progress="0.5" />
+                           </children>
+                        </HBox>
+
+                        <!-- Slider de brillo (opcional) -->
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                           <children>
+                              <Label text="Ajuste:" minWidth="40.0"/>
+                              <Slider fx:id="brightnessSlider" min="10.0" max="300.0" value="100.0" showTickLabels="false" showTickMarks="false" prefWidth="150.0" onMouseReleased="#handleBrightnessSlider"/>
+                           </children>
+                        </HBox>
+
+                        <!-- Botones de brillo -->
+                        <HBox alignment="CENTER" spacing="8.0">
+                           <children>
+                              <Button fx:id="increaseBrightnessBtn" onAction="#handleIncreaseBrightness" prefHeight="32.0" prefWidth="105.0" style="-fx-background-color: #5ba3f5; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px;" text="Aumentar (+)"/>
+                              <Button fx:id="decreaseBrightnessBtn" onAction="#handleDecreaseBrightness" prefHeight="32.0" prefWidth="105.0" style="-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 11px;" text="Disminuir (-)"/>
+                           </children>
+                        </HBox>
+
+                        <!-- Botones de preset -->
+                        <HBox alignment="CENTER" spacing="5.0">
+                           <children>
+                              <Button fx:id="darkBtn" onAction="#handleDarkPreset" prefHeight="25.0" prefWidth="60.0" style="-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 10px;" text="Oscuro"/>
+                              <Button fx:id="normalBtn" onAction="#handleNormalPreset" prefHeight="25.0" prefWidth="60.0" style="-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 10px;" text="Normal"/>
+                              <Button fx:id="brightBtn" onAction="#handleBrightPreset" prefHeight="25.0" prefWidth="60.0" style="-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 10px;" text="Brillante"/>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <!-- Controles de Rotación y Filtros -->
+                  <VBox spacing="8.0">
+                     <children>
+                        <Label text="Efectos:" style="-fx-font-weight: bold;"/>
+                        <HBox alignment="CENTER" spacing="10.0">
+                           <children>
+                              <Button fx:id="rotateBtn" onAction="#handleRotate" prefHeight="35.0" prefWidth="120.0" style="-fx-background-color: #ffc107; -fx-text-fill: black; -fx-font-weight: bold;" text="Rotar 90°">
+                                 <graphic>
+                                    <Label text="↻" style="-fx-text-fill: black; -fx-font-size: 16px;"/>
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="grayscaleBtn" onAction="#handleGrayscale" prefHeight="35.0" prefWidth="120.0" style="-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-weight: bold;" text="Blanco y Negro" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <!-- Información de la imagen -->
+                  <VBox spacing="5.0" style="-fx-background-color: #f8f9fa; -fx-padding: 10; -fx-border-color: #dee2e6; -fx-border-width: 1;">
+                     <children>
+                        <Label text="Información:" style="-fx-font-weight: bold;"/>
+                        <Label fx:id="imageInfoLabel" text="Ninguna imagen seleccionada" wrapText="true" style="-fx-text-fill: #666;"/>
+                     </children>
+                  </VBox>
+
+                  <!-- Botones de acción -->
+                  <VBox spacing="10.0" VBox.vgrow="ALWAYS">
+                     <children>
+                        <!-- Spacer para empujar los botones hacia abajo -->
+                        <AnchorPane VBox.vgrow="ALWAYS"/>
+
+                        <!-- Botón de resetear cambios -->
+                        <Button fx:id="resetBtn" disable="true" maxWidth="1.7976931348623157E308" onAction="#handleResetImage" prefHeight="35.0" style="-fx-background-color: #ffc107; -fx-text-fill: black; -fx-font-weight: bold;" text="Restablecer Original">
+                           <font>
+                              <Font size="12.0" />
+                           </font>
+                        </Button>
+
+                        <Button fx:id="saveImageBtn" disable="true" maxWidth="1.7976931348623157E308" onAction="#handleSaveImage" prefHeight="40.0" style="-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;" text="Guardar Imagen">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Button>
+
+                        <Button fx:id="backButton" maxWidth="1.7976931348623157E308" onAction="#handleBackButton" prefHeight="40.0" style="-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-weight: bold;" text="← Volver a Galería">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </VBox>
                </children>
-            </HBox>
-            <Button fx:id="saveBtn" onAction="#handleSaveImage" prefWidth="230.0" style="-fx-background-color: #34a853; -fx-text-fill: white;" text="Guardar Imagen">
-               <font>
-                  <Font name="System Bold" size="12.0" />
-               </font>
-            </Button>
+            </VBox>
          </children>
-      </VBox>
+      </HBox>
    </children>
 </AnchorPane>

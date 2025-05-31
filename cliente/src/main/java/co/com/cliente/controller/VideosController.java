@@ -2,6 +2,7 @@ package co.com.cliente.controller;
 
 import co.com.cliente.dto.VideoDTO;
 import co.com.cliente.httpRequest.HttpService;
+import co.com.cliente.redis.RedisCache;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -13,7 +14,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -28,7 +28,6 @@ import javafx.scene.text.FontWeight;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
@@ -46,6 +45,12 @@ public class VideosController implements Initializable {
     @FXML
     private GridPane videoGrid;
 
+    @FXML
+    private Label statusLabel;
+
+    @FXML
+    private Button verMasButton;
+
     private File tempDir;
     private Long usuarioId = 2L; // ID del usuario actual (podrías pasarlo como parámetro)
     private static final String API_GET_VIDEOS_URL = "http://localhost:9000/api/video/usuario/";
@@ -53,17 +58,126 @@ public class VideosController implements Initializable {
     private static final String API_UPDATE_VIDEO_URL = "http://localhost:9000/api/video/update";
     private static final String API_DELETE_VIDEO_URL = "http://localhost:9000/api/video/";
 
+    private boolean mostrandoCache = true;
     private List<VideoDTO> videos = new ArrayList<>();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Inicializar componentes visuales
+        if (statusLabel != null) {
+            statusLabel.setText("Iniciando...");
+        }
+
+        if (verMasButton != null) {
+            verMasButton.setVisible(false);
+        }
+
         // Crear directorio temporal para videos descargados si es necesario
         tempDir = new File(System.getProperty("java.io.tmpdir") + "/security_camera_temp");
         if (!tempDir.exists()) {
             tempDir.mkdirs();
         }
 
-        // Cargar videos desde el servidor
+        // Posponer la carga de datos para evitar bloqueos durante la carga de FXML
+        Platform.runLater(this::iniciarCargaDeVideos);
+    }
+
+    // Método auxiliar para iniciar la carga después de que el FXML esté completamente cargado
+    private void iniciarCargaDeVideos() {
+        try {
+            // Comprobar si Redis está disponible y actuar en consecuencia
+            RedisCache cache = RedisCache.getInstance();
+            if (cache.isRedisDisponible()) {
+                // Redis está disponible, intentamos cargar desde caché
+                cargarVideosDesdeCache();
+            } else {
+                // Redis no está disponible, cargamos directamente del servidor
+                mostrandoCache = false;
+                if (statusLabel != null) {
+                    statusLabel.setText("Cargando videos desde el servidor...");
+                }
+                if (verMasButton != null) {
+                    verMasButton.setVisible(false);
+                }
+                loadVideosFromServer();
+            }
+        } catch (Exception e) {
+            // Capturar cualquier excepción durante la inicialización
+            e.printStackTrace();
+            if (statusLabel != null) {
+                statusLabel.setText("Error al inicializar. Cargando desde el servidor...");
+            }
+            mostrandoCache = false;
+            loadVideosFromServer();
+        }
+    }
+
+    // Método para cargar videos desde la caché
+    private void cargarVideosDesdeCache() {
+        try {
+            RedisCache cache = RedisCache.getInstance();
+
+            // Verificación adicional de disponibilidad
+            if (!cache.isRedisDisponible()) {
+                mostrandoCache = false;
+                if (statusLabel != null) {
+                    statusLabel.setText("Caché no disponible. Cargando desde el servidor...");
+                }
+                if (verMasButton != null) {
+                    verMasButton.setVisible(false);
+                }
+                loadVideosFromServer();
+                return;
+            }
+
+            if (cache.hayVideosEnCache(usuarioId)) {
+                // Hay videos en caché, los cargamos
+                videos = cache.obtenerVideosDeUsuario(usuarioId);
+                mostrandoCache = true;
+                if (statusLabel != null) {
+                    statusLabel.setText("Mostrando los últimos 5 videos vistos (desde caché)");
+                }
+                if (verMasButton != null) {
+                    verMasButton.setVisible(true);
+                }
+
+                displayVideos();
+            } else {
+                // No hay caché, cargamos del servidor
+                mostrandoCache = false;
+                if (statusLabel != null) {
+                    statusLabel.setText("Cargando videos desde el servidor...");
+                }
+                if (verMasButton != null) {
+                    verMasButton.setVisible(false);
+                }
+
+                loadVideosFromServer();
+            }
+        } catch (Exception e) {
+            // Capturar cualquier excepción durante la carga de caché
+            e.printStackTrace();
+            mostrandoCache = false;
+            if (statusLabel != null) {
+                statusLabel.setText("Error al cargar caché. Cargando desde el servidor...");
+            }
+            loadVideosFromServer();
+        }
+    }
+
+    // Método para el botón "Ver Más"
+    @FXML
+    public void cargarTodosVideos() {
+        // Si ya estamos mostrando todos los videos, no hacemos nada
+        if (!mostrandoCache) {
+            return;
+        }
+
+        // Cambiamos estado y cargamos todos los videos
+        mostrandoCache = false;
+        statusLabel.setText("Cargando todos los videos...");
+        verMasButton.setVisible(false);
+
         loadVideosFromServer();
     }
 
@@ -117,8 +231,17 @@ public class VideosController implements Initializable {
                 // Ordenar videos por fecha (más recientes primero)
                 videos.sort(Comparator.comparing(VideoDTO::getFecha).reversed());
 
+                // Guardar los últimos 5 videos en caché si Redis está disponible
+                RedisCache cache = RedisCache.getInstance();
+                if (cache.isRedisDisponible()) {
+                    cache.guardarVideosDeUsuario(usuarioId, videos);
+                }
+
                 // Actualizar la interfaz en el hilo de JavaFX
                 Platform.runLater(() -> {
+                    mostrandoCache = false;
+                    statusLabel.setText("Mostrando todos los videos (" + videos.size() + ")");
+                    verMasButton.setVisible(false);
                     displayVideos();
                 });
 
@@ -136,6 +259,9 @@ public class VideosController implements Initializable {
                     errorLabel.setOnMouseClicked(event -> loadVideosFromServer());
 
                     videoGrid.add(errorLabel, 0, 0);
+
+                    statusLabel.setText("Error al cargar videos");
+                    verMasButton.setVisible(false);
                 });
             }
         }).start();
@@ -165,6 +291,16 @@ public class VideosController implements Initializable {
             Label noVideosLabel = new Label("No hay videos disponibles.");
             noVideosLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
             videoGrid.add(noVideosLabel, 0, 0, 3, 1); // Que ocupe las 3 columnas
+
+            // Actualizamos la etiqueta de estado
+            if (mostrandoCache) {
+                statusLabel.setText("No hay videos en caché");
+                verMasButton.setText("Cargar Videos");
+            } else {
+                statusLabel.setText("No hay videos disponibles");
+                verMasButton.setVisible(false);
+            }
+
             return;
         }
 
@@ -209,8 +345,6 @@ public class VideosController implements Initializable {
 
         // Información del video
         VBox infoBox = new VBox(2);
-//        infoBox.setStyle("-fx-background-color: lightgray;");
-
         infoBox.setPadding(new Insets(5, 10, 5, 10));
 
         // Nombre del video (truncado si es muy largo)
@@ -422,8 +556,23 @@ public class VideosController implements Initializable {
                     Platform.runLater(() -> {
                         showAlert(Alert.AlertType.INFORMATION, "Video actualizado",
                                 "El nombre del video ha sido actualizado correctamente.");
-                        // Recargar la lista de videos
-                        loadVideosFromServer();
+
+                        // Actualizar video en la lista local
+                        for (VideoDTO v : videos) {
+                            if (v.getId() == video.getId()) {
+                                v.setNombre(newName);
+                                break;
+                            }
+                        }
+
+                        // Actualizar la caché si estamos mostrando todos los videos y Redis está disponible
+                        RedisCache cache = RedisCache.getInstance();
+                        if (!mostrandoCache && cache.isRedisDisponible()) {
+                            cache.guardarVideosDeUsuario(usuarioId, videos);
+                        }
+
+                        // Recargar la vista
+                        displayVideos();
                     });
 
                 } catch (Exception e) {
@@ -468,6 +617,12 @@ public class VideosController implements Initializable {
 
                             // Eliminar el video de la lista
                             videos.removeIf(v -> v.getId() == videoToRemove.getId());
+
+                            // Actualizar la caché si estamos mostrando todos los videos y Redis está disponible
+                            RedisCache cache = RedisCache.getInstance();
+                            if (!mostrandoCache && cache.isRedisDisponible()) {
+                                cache.guardarVideosDeUsuario(usuarioId, videos);
+                            }
 
                             // Actualizar la vista en el hilo de UI
                             displayVideos();
@@ -523,6 +678,11 @@ public class VideosController implements Initializable {
     }
 
     public void refreshVideos() {
-        loadVideosFromServer();
+        // Si estábamos mostrando caché, mantener ese estado
+        if (mostrandoCache) {
+            cargarVideosDesdeCache();
+        } else {
+            loadVideosFromServer();
+        }
     }
 }

@@ -16,11 +16,7 @@ public class VideoMapper {
 
         byte[] videoBytes = null;
         if (videoDTO.getVideo() != null && !videoDTO.getVideo().isEmpty()) {
-            try {
-                videoBytes = Base64.getDecoder().decode(videoDTO.getVideo());
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Error al decodificar el video Base64", e);
-            }
+            videoBytes = base64ToBytes(videoDTO.getVideo());
         }
 
         return new Video(
@@ -52,5 +48,36 @@ public class VideoMapper {
                 video.getCamara().getId(),
                 video.getUsuario().getId()
         );
+    }
+
+    /**
+     * Convierte un Video a VideoDTO sin incluir el contenido binario del video
+     * Útil para listar videos sin sobrecargar la respuesta
+     */
+    public static VideoDTO toVideoDTOWithoutContent(Video video) {
+        if (video == null) {
+            return null;
+        }
+
+        return new VideoDTO(
+                video.getId(),
+                video.getNombre(),
+                video.getFecha(),
+                null, // No incluimos el contenido del video
+                video.getDuracion(),
+                video.getCamara().getId(),
+                video.getUsuario().getId()
+        );
+    }
+
+    /**
+     * Convierte una cadena Base64 a un array de bytes
+     */
+    public static byte[] base64ToBytes(String base64) {
+        try {
+            return Base64.getDecoder().decode(base64);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Error al decodificar el video Base64", e);
+        }
     }
 }
