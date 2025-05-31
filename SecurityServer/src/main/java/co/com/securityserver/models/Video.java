@@ -17,7 +17,7 @@ public class Video {
     private Date fecha;
     @Lob
     @Column(columnDefinition = "LONGBLOB")
-    private Byte[] video;
+    private byte[] video;
     private String duracion;
     @ManyToOne
     @JoinColumn(name = "camara_id", nullable = false)
@@ -28,7 +28,7 @@ public class Video {
 
     public Video() {
     }
-    public Video(String nombre, Date fecha, Byte[] video, String duracion, Camara camara, Usuario usuario) {
+    public Video(String nombre, Date fecha, byte[] video, String duracion, Camara camara, Usuario usuario) {
         this.nombre = nombre;
         this.fecha = fecha;
         this.video = video;

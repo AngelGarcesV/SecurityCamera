@@ -59,4 +59,6 @@ public class ImagenProcesadaController {
                 .collect(Collectors.toList());
         return new ResponseEntity<>(imagenProcesadaDTOs, HttpStatus.OK);
     }
+
+
 }

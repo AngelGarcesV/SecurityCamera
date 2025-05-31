@@ -11,4 +11,7 @@ import java.util.Optional;
 public interface VideoRepository extends CrudRepository<Video, Long>{
     @Query(value = "SELECT V FROM Video V WHERE V.camara.id = :camaraId")
     Optional<List<Video>>  findByCamaraId(@Param("camaraId") Long camaraId);
+
+    @Query(value = "SELECT V FROM Video V WHERE V.usuario.id = :id")
+    Optional<List<Video>>  findByUsuarioId(@Param("id") Long id);
 }

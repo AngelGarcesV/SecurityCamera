@@ -27,9 +27,6 @@ public class ApplicationController implements Initializable {
     private AnchorPane grabarVideoOption;
 
     @FXML
-    private AnchorPane editarFotosOption;
-
-    @FXML
     private Label titleLabel;
 
     @FXML
@@ -40,10 +37,8 @@ public class ApplicationController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Inicializar array para facilitar la manipulación
-        optionPanes = new AnchorPane[]{videosOption, fotosOption, grabarVideoOption, editarFotosOption};
+        optionPanes = new AnchorPane[]{videosOption, fotosOption, grabarVideoOption};
 
-        // Por defecto mostramos la opción "VIDEOS"
         updateSelection(0);
     }
 
@@ -57,27 +52,22 @@ public class ApplicationController implements Initializable {
             updateSelection(1);
         } else if (clickedPane.equals(grabarVideoOption)) {
             updateSelection(2);
-        } else if (clickedPane.equals(editarFotosOption)) {
-            updateSelection(3);
         }
     }
 
     private void updateSelection(int selectedIndex) {
-        // Evitar recargar la misma vista
         if (currentViewIndex == selectedIndex) {
             return;
         }
 
-        // Actualizar el estilo del menú
         for (int i = 0; i < optionPanes.length; i++) {
             if (i == selectedIndex) {
-                optionPanes[i].setStyle("-fx-background-color: #333333;"); // Color más oscuro para la selección
+                optionPanes[i].setStyle("-fx-background-color: #333333;");
             } else {
-                optionPanes[i].setStyle("-fx-background-color: #404040;"); // Color normal
+                optionPanes[i].setStyle("-fx-background-color: #404040;");
             }
         }
 
-        // Cambiar el título según la opción seleccionada
         String title;
 
         switch (selectedIndex) {
@@ -90,21 +80,15 @@ public class ApplicationController implements Initializable {
             case 2:
                 title = "GRABAR VIDEO";
                 break;
-            case 3:
-                title = "EDITAR FOTOS";
-                break;
             default:
                 title = "VIDEOS";
                 break;
         }
 
-        // Actualizar el título
         titleLabel.setText(title);
 
-        // Cargar la vista correspondiente
         loadViewByIndex(selectedIndex);
 
-        // Actualizar el índice de la vista actual
         currentViewIndex = selectedIndex;
     }
 
@@ -119,10 +103,8 @@ public class ApplicationController implements Initializable {
                 fxmlPath = "/co/com/cliente/views/fotos-view.fxml";
                 break;
             case 2:
-                fxmlPath = "/co/com/cliente/views/grabar-video-view.fxml";
-                break;
-            case 3:
-                fxmlPath = "/co/com/cliente/views/editar-fotos-view.fxml";
+                // Cambiamos la ruta para que cargue la vista de selección de cámara primero
+                fxmlPath = "/co/com/cliente/views/select-camara-view.fxml";
                 break;
             default:
                 fxmlPath = "/co/com/cliente/views/videos-view.fxml";
@@ -130,18 +112,33 @@ public class ApplicationController implements Initializable {
         }
 
         try {
-            // Cargar la vista FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent view = loader.load();
 
-            // Limpiar y añadir la nueva vista
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
 
         } catch (IOException e) {
             e.printStackTrace();
-            // En caso de error, mostrar mensaje
             showAlert(Alert.AlertType.ERROR, "Error", "No se pudo cargar la vista: " + e.getMessage());
+        }
+    }
+
+    // Método público para cargar la vista de editar fotos desde FotosController
+    public void loadEditarFotosView() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
+            Parent view = loader.load();
+
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(view);
+
+            // Actualizar el título
+            titleLabel.setText("EDITAR FOTOS");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo cargar la vista de edición: " + e.getMessage());
         }
     }
 
