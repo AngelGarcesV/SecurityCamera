@@ -59,11 +59,7 @@ public class CamaraService {
 
     @Transactional(readOnly = true)
     public List<Camara> getAllCamaras() {
-        List<Camara> cameraList = (List<Camara>) camaraRepo.findAll();
-        if(cameraList.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron cámaras");
-        }
-        return cameraList;
+        return (List<Camara>) camaraRepo.findAll();
     }
 
     @Transactional
@@ -82,7 +78,6 @@ public class CamaraService {
     @Transactional(readOnly = true)
     public List<Camara> getCamarasByUsuarioId(Long usuarioId) {
         return camaraRepo.findByUsuarioId(usuarioId)
-                .filter(list -> !list.isEmpty())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron cámaras para el usuario"));
+                .orElse(List.of());
     }
 }

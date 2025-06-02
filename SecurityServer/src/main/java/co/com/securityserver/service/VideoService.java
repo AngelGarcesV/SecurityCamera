@@ -165,7 +165,7 @@ public class VideoService {
     @Transactional(readOnly = true)
     public List<Video> GetVideosByUsuarioId(Long usuarioId) {
         return videoRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No se encontraron videos relacionados con el usuario de id: " + usuarioId));
+                .orElse(List.of());
     }
+
 }

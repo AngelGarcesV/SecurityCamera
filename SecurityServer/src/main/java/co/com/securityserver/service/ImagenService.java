@@ -91,7 +91,6 @@ public class ImagenService {
     @Transactional(readOnly = true)
     public List<Imagen> getImagenByUsuarioId(Long usuarioId) {
         return imagenRepository.findByUsuarioId(usuarioId)
-                .filter(list -> !list.isEmpty())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron imágenes para el usuario con ID: " + usuarioId));
+                .orElse(List.of());
     }
 }
