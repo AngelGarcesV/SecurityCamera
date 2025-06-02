@@ -20,6 +20,9 @@ module co.com.cliente {
     requires com.auth0.jwt;
     requires java.logging;
     requires imgscalr.lib;
+    requires javafx.swing;
+    requires jakarta.websocket.client;
+    requires Java.WebSocket;
 
     opens co.com.cliente to javafx.fxml;
     exports co.com.cliente;

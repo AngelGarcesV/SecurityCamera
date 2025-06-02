@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 @Service
@@ -63,6 +65,30 @@ public class VideoService {
 
         // Establecer el contenido del archivo
         video.setVideo(videoFile.getBytes());
+
+        return videoRepository.save(video);
+    }
+
+    @Transactional
+    public Video saveVideoFromFile(VideoDTO dto, File videoFile) throws IOException {
+        Usuario infoUser = usuarioRepository.findById(dto.getUsuarioId()).orElse(null);
+        Camara camaraInfo = camaraRepository.findById(dto.getCamaraId()).orElse(null);
+
+        if(infoUser == null || camaraInfo == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró el usuario o la cámara");
+        }
+
+        // Crear el objeto Video con los metadatos
+        Video video = new Video();
+        video.setNombre(dto.getNombre());
+        video.setFecha(dto.getFecha());
+        video.setDuracion(dto.getDuracion());
+        video.setCamara(camaraInfo);
+        video.setUsuario(infoUser);
+
+        // Leer el archivo y establecer el contenido
+        byte[] fileBytes = Files.readAllBytes(videoFile.toPath());
+        video.setVideo(fileBytes);
 
         return videoRepository.save(video);
     }
