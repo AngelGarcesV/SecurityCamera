@@ -10,7 +10,12 @@ function decodeJWT(token) {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
     const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+    );
     return JSON.parse(jsonPayload);
   } catch {
     return null;
@@ -26,18 +31,16 @@ function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Cargar si había recordado sesión
     const savedUser = localStorage.getItem("rememberedUser");
     if (savedUser) {
       setUsuario(savedUser);
       setRecordarme(true);
     }
-
-    // Limpiar la sesión anterior (pero no borrar rememberedUser)
     localStorage.removeItem("token");
     localStorage.removeItem("rol");
     localStorage.removeItem("usuario");
     localStorage.removeItem("nombre");
+    localStorage.removeItem("userId");
   }, []);
 
   const handleLogin = async () => {
@@ -46,17 +49,19 @@ function Login() {
     try {
       setIsLoggingIn(true);
       const res = await api.post("/auth/login", { correo: usuario, password });
+      let token, rol, nombre, userId;
 
-      let token, rol, nombre;
-
-      if (typeof res.data === 'object') {
+      if (typeof res.data === "object") {
         token = res.data.token;
         rol = res.data.rol;
         nombre = res.data.nombre;
+        userId = res.data.id;
       } else {
         token = res.data;
         const decoded = decodeJWT(token);
+        console.log("🔍 JWT decodificado:", decoded);
         rol = decoded?.rol;
+        userId = decoded?.userId; // ✅ Aquí usamos el campo correcto
       }
 
       if (!token) throw new Error("Token no recibido");
@@ -67,16 +72,18 @@ function Login() {
       localStorage.setItem("rol", rol);
       localStorage.setItem("usuario", usuario);
       if (nombre) localStorage.setItem("nombre", nombre);
+      if (userId) localStorage.setItem("userId", userId);
 
       if (recordarme) {
         localStorage.setItem("rememberedUser", usuario);
-      } else {
-        localStorage.removeItem("rememberedUser");
       }
 
       navigate("/reportes", { replace: true });
     } catch (error) {
-      const msg = error?.response?.data?.mensaje || error?.message || "Error de autenticación";
+      const msg =
+          error?.response?.data?.mensaje ||
+          error?.message ||
+          "Error de autenticación";
       setError(msg);
     } finally {
       setIsLoggingIn(false);
@@ -88,17 +95,32 @@ function Login() {
         <div className="login-card">
           <h2 className="login-title">Sistema de Gestión de Cámaras</h2>
           <p className="login-subtitle">Accede a tu panel de control</p>
-          {error && <div className="error-message" style={{ color: "red" }}>{error}</div>}
+          {error && (
+              <div className="error-message" style={{ color: "red" }}>
+                {error}
+              </div>
+          )}
           <div>
             <div className="form-group">
               <label className="form-label">Usuario</label>
-              <input type="text" placeholder="Ingrese su usuario" value={usuario} onChange={(e) => setUsuario(e.target.value)} className="login-input" />
+              <input
+                  type="text"
+                  placeholder="Ingrese su usuario"
+                  value={usuario}
+                  onChange={(e) => setUsuario(e.target.value)}
+                  className="login-input"
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Contraseña</label>
-              <input type="password" placeholder="Ingrese su contraseña" value={password} onChange={(e) => setPassword(e.target.value)} className="login-input" />
+              <input
+                  type="password"
+                  placeholder="Ingrese su contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="login-input"
+              />
             </div>
-
             <div className="checkbox-row">
               <label>
                 <input
@@ -109,13 +131,19 @@ function Login() {
                 Recordarme
               </label>
             </div>
-
-            <button onClick={handleLogin} className="login-button" disabled={isLoggingIn}>
+            <button
+                onClick={handleLogin}
+                className="login-button"
+                disabled={isLoggingIn}
+            >
               {isLoggingIn ? "Iniciando sesión..." : "Iniciar Sesión"}
             </button>
 
             <div className="register-container">
-              ¿No tiene una cuenta? <a href="/registro" className="register-link">Registrarse</a>
+              ¿No tiene una cuenta?{" "}
+              <a href="/registro" className="register-link">
+                Registrarse
+              </a>
             </div>
           </div>
         </div>

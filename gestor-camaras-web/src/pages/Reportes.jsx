@@ -14,16 +14,29 @@ import '@/styles/reportes.css';
 
 function Reportes() {
   const [datos, setDatos] = useState({ camaras: 0, imagenes: 0, videos: 0 });
+  const [busqueda, setBusqueda] = useState('');
+  const [datosPorId, setDatosPorId] = useState(null);
+  const [usuario, setUsuario] = useState('');
+  const rol = localStorage.getItem('rol');
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     const fetchDatos = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:9000/api/reportes', {
+        let url = '';
+        if (rol === 'admin') {
+          url = 'http://localhost:9000/api/reportes/todos';
+        } else {
+          url = `http://localhost:9000/api/reportes/usuario/${userId}`;
+        }
+
+        const res = await axios.get(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
         setDatos(res.data);
       } catch (error) {
         console.error('Error al obtener datos del reporte:', error);
@@ -31,13 +44,28 @@ function Reportes() {
     };
 
     fetchDatos();
-  }, []);
+  }, [rol, userId]);
 
   const datosGrafico = [
-    { nombre: 'Cámaras Activas', cantidad: datos.camaras },
-    { nombre: 'Imágenes Tomadas', cantidad: datos.imagenes },
-    { nombre: 'Videos Grabados', cantidad: datos.videos },
+    { nombre: 'Cámaras Activas', cantidad: datos.camaras || 0 },
+    { nombre: 'Imágenes Tomadas', cantidad: datos.imagenes || 0 },
+    { nombre: 'Videos Grabados', cantidad: datos.videos || 0 },
   ];
+
+  const buscarPorId = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`http://localhost:9000/api/reportes/camara/${busqueda}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setDatosPorId(res.data);
+    } catch (error) {
+      console.error('No se encontró información para el ID ingresado:', error);
+      setDatosPorId(null);
+    }
+  };
 
   return (
       <div className="main-content">
@@ -47,6 +75,31 @@ function Reportes() {
             <p className="page-subtitle">Estadísticas generales del sistema</p>
           </div>
         </div>
+
+        {rol === 'admin' && (
+            <div className="busqueda-id">
+              <input
+                  type="text"
+                  placeholder="Buscar reportes por ID de cámara"
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="busqueda-input"
+              />
+              <button onClick={buscarPorId} className="busqueda-boton">Buscar</button>
+            </div>
+        )}
+
+        {datosPorId && (
+            <div className="stat-card">
+              <h3>Resultados para cámara ID: {busqueda}</h3>
+              <p>Cámaras Activas: {datosPorId.camaras}</p>
+              <p>Imágenes Tomadas: {datosPorId.imagenes}</p>
+              <p>Videos Grabados: {datosPorId.videos}</p>
+              {datosPorId.usuario && (
+                  <p>Usuario: {datosPorId.usuario}</p>
+              )}
+            </div>
+        )}
 
         <div className="stats-container">
           <div className="stat-card">
@@ -80,5 +133,4 @@ function Reportes() {
 }
 
 export default Reportes;
-
 

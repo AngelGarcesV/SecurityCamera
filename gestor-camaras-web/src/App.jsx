@@ -22,11 +22,12 @@ function App() {
                     <Route path="reportes" element={<Reportes />} />
                     <Route path="camaras" element={<Camaras />} />
                     <Route path="ubicacion" element={<Mapa />} />
-                    <Route path="usuarios" element={<Usuarios />} />
-                    <Route path="usuarios/crear" element={<CrearUsuario />} />
-                    <Route path="usuarios/editar" element={<EditarUsuario />} />
-                    <Route path="usuarios/eliminar" element={<EliminarUsuario />} />
-                    <Route path="usuarios/ver" element={<VerUsuarios />} />
+                    <Route path="usuarios" element={<Usuarios />}>
+                        <Route path="crear" element={<CrearUsuario />} />
+                        <Route path="editar" element={<EditarUsuario />} />
+                        <Route path="eliminar" element={<EliminarUsuario />} />
+                        <Route path="ver" element={<VerUsuarios />} />
+                    </Route>
                     <Route path="camaras/:id/galeria" element={<Galeria />} /> {/* ✅ Nueva ruta */}
                 </Route>
             </Routes>
