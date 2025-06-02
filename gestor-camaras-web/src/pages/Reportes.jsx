@@ -16,7 +16,7 @@ function Reportes() {
   const [datos, setDatos] = useState({ camaras: 0, imagenes: 0, videos: 0 });
   const [busqueda, setBusqueda] = useState('');
   const [datosPorId, setDatosPorId] = useState(null);
-  const [usuario, setUsuario] = useState('');
+
   const rol = localStorage.getItem('rol');
   const userId = localStorage.getItem('userId');
 
@@ -24,20 +24,32 @@ function Reportes() {
     const fetchDatos = async () => {
       try {
         const token = localStorage.getItem('token');
-        let url = '';
-        if (rol === 'admin') {
-          url = 'http://localhost:9000/api/reportes/todos';
-        } else {
-          url = `http://localhost:9000/api/reportes/usuario/${userId}`;
-        }
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+        const urls = {
+          camaras: rol === 'admin'
+              ? '/api/camara/all'
+              : `/api/camara/usuario/${userId}`,
+          imagenes: rol === 'admin'
+              ? '/api/imagen/all'
+              : `/api/imagen/usuario/${userId}`,
+          videos: rol === 'admin'
+              ? '/api/video/all'
+              : `/api/video/usuario/${userId}`,
+        };
 
-        const res = await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const [resCamaras, resImagenes, resVideos] = await Promise.all([
+          axios.get(urls.camaras, { headers }),
+          axios.get(urls.imagenes, { headers }),
+          axios.get(urls.videos, { headers }),
+        ]);
+
+        setDatos({
+          camaras: resCamaras.data.length,
+          imagenes: resImagenes.data.length,
+          videos: resVideos.data.length,
         });
-
-        setDatos(res.data);
       } catch (error) {
         console.error('Error al obtener datos del reporte:', error);
       }
@@ -47,20 +59,28 @@ function Reportes() {
   }, [rol, userId]);
 
   const datosGrafico = [
-    { nombre: 'Cámaras Activas', cantidad: datos.camaras || 0 },
-    { nombre: 'Imágenes Tomadas', cantidad: datos.imagenes || 0 },
-    { nombre: 'Videos Grabados', cantidad: datos.videos || 0 },
+    { nombre: 'Cámaras Activas', cantidad: datos.camaras },
+    { nombre: 'Imágenes Tomadas', cantidad: datos.imagenes },
+    { nombre: 'Videos Grabados', cantidad: datos.videos },
   ];
 
   const buscarPorId = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`http://localhost:9000/api/reportes/camara/${busqueda}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+      const [resCam, resImg, resVid] = await Promise.all([
+        axios.get(`/api/camara/${busqueda}`, { headers }),
+        axios.get(`/api/imagen/camara/${busqueda}`, { headers }),
+        axios.get(`/api/video/camara/${busqueda}`, { headers }),
+      ]);
+
+      setDatosPorId({
+        camaras: resCam.data ? 1 : 0,
+        imagenes: resImg.data.length,
+        videos: resVid.data.length,
       });
-      setDatosPorId(res.data);
     } catch (error) {
       console.error('No se encontró información para el ID ingresado:', error);
       setDatosPorId(null);
@@ -75,7 +95,6 @@ function Reportes() {
             <p className="page-subtitle">Estadísticas generales del sistema</p>
           </div>
         </div>
-
         {rol === 'admin' && (
             <div className="busqueda-id">
               <input
@@ -92,12 +111,9 @@ function Reportes() {
         {datosPorId && (
             <div className="stat-card">
               <h3>Resultados para cámara ID: {busqueda}</h3>
-              <p>Cámaras Activas: {datosPorId.camaras}</p>
+              <p>Cámara encontrada: {datosPorId.camaras ? 'Sí' : 'No'}</p>
               <p>Imágenes Tomadas: {datosPorId.imagenes}</p>
               <p>Videos Grabados: {datosPorId.videos}</p>
-              {datosPorId.usuario && (
-                  <p>Usuario: {datosPorId.usuario}</p>
-              )}
             </div>
         )}
 
@@ -133,4 +149,3 @@ function Reportes() {
 }
 
 export default Reportes;
-

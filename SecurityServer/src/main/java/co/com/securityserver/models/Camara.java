@@ -1,8 +1,6 @@
 package co.com.securityserver.models;
 
 import jakarta.persistence.*;
-
-import co.com.securityserver.models.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -19,9 +17,17 @@ public class Camara {
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
+
+    private String ip;
+
+    private Integer puerto;
+
     private String descripcion;
+
     private Double coordenadax;
+
     private Double coordenaday;
+
     private String resolucion;
 
     @OneToMany(mappedBy = "camara", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -30,18 +36,18 @@ public class Camara {
     @OneToMany(mappedBy = "camara", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Video> videos = new ArrayList<>();
 
-    public Camara() {
-    }
-    public Camara(Long id, Usuario usuario, String descripcion, Double coordenadax, Double coordenaday, String resolucion) {
+    public Camara() {}
+
+    public Camara(Long id, String ip, Integer puerto, Usuario usuario, String descripcion, Double coordenadax, Double coordenaday, String resolucion) {
         this.id = id;
+        this.ip = ip;
+        this.puerto = puerto;
         this.usuario = usuario;
         this.descripcion = descripcion;
         this.coordenadax = coordenadax;
         this.coordenaday = coordenaday;
         this.resolucion = resolucion;
     }
-
-
 
     public void addImagen(Imagen imagen) {
         imagenes.add(imagen);

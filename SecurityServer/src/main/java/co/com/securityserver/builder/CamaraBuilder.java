@@ -9,5 +9,7 @@ public interface CamaraBuilder {
     CamaraBuilder setCoordenaday(Double coordenaday);
     CamaraBuilder setResolucion(String resolucion);
     CamaraBuilder setUsuario(Long usuarioId);
+    CamaraBuilder setIp(String ip);
+    CamaraBuilder setPuerto(Integer puerto);
     Camara build();
 }

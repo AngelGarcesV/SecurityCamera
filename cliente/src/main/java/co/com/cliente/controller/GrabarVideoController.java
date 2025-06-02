@@ -121,11 +121,11 @@ public class GrabarVideoController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         try {
-            System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+            nu.pattern.OpenCV.loadLocally();
             System.out.println("OpenCV cargado correctamente: " + Core.VERSION);
         } catch (UnsatisfiedLinkError e) {
             try {
-                System.loadLibrary("opencv_java4110");
+                System.loadLibrary("opencv_java470");
                 System.out.println("OpenCV 4.11.0 cargado correctamente.");
             } catch (UnsatisfiedLinkError e2) {
                 System.err.println("Error al cargar OpenCV: " + e2.getMessage());

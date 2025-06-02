@@ -11,17 +11,19 @@ public class ImagenProcesadaDTO {
     private String nombre;
     private String resolucion;
     private byte[] imagenEditada;
+    private String imagen; // <- base64 para frontend
     private Date fecha;
     private Long imagenId;
 
     public ImagenProcesadaDTO() {
     }
 
-    public ImagenProcesadaDTO(Long id, String nombre, String resolucion, byte[] imagenEditada, Date fecha, Long imagenId) {
+    public ImagenProcesadaDTO(Long id, String nombre, String resolucion, byte[] imagenEditada, String imagen, Date fecha, Long imagenId) {
         this.id = id;
         this.nombre = nombre;
         this.resolucion = resolucion;
         this.imagenEditada = imagenEditada;
+        this.imagen = imagen;
         this.fecha = fecha;
         this.imagenId = imagenId;
     }

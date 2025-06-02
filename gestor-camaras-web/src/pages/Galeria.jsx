@@ -10,13 +10,12 @@ function Galeria() {
     const [imagenes, setImagenes] = useState([]);
     const [videos, setVideos] = useState([]);
     const [imagenesProcesadas, setImagenesProcesadas] = useState([]);
-
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const resCam = await api.get(`/camaras/${id}`);
+                const resCam = await api.get(`/camara/${id}`);
                 const resImg = await api.get(`/imagenes/camara/${id}`);
-                const resVid = await api.get(`/videos/camara/${id}`);
+                const resVid = await api.get(`/video/camara/${id}`);
                 const resProc = await api.get(`/imagenesProcesadas/camara/${id}`);
 
                 setCamara(resCam.data);
@@ -44,7 +43,11 @@ function Galeria() {
                 {imagenes.length > 0 ? (
                     <div className="galeria-grid">
                         {imagenes.map((img) => (
-                            <img key={img.id} src={img.url} alt={`Imagen ${img.id}`} />
+                            <img
+                                key={img.id}
+                                src={`data:image/jpeg;base64,${img.imagen}`}
+                                alt={`Imagen ${img.id}`}
+                            />
                         ))}
                     </div>
                 ) : (
@@ -54,11 +57,19 @@ function Galeria() {
 
             <div className="galeria-seccion">
                 <h3>Videos</h3>
-                {videos.length > 0 ? (
+                {videos.length > 0 && videos.some(v => v.video) ? (
                     <div className="galeria-grid">
-                        {videos.map((vid) => (
-                            <video key={vid.id} controls src={vid.url}></video>
-                        ))}
+                        {videos.map((vid) =>
+                            vid.video ? (
+                                <video key={vid.id} controls>
+                                    <source
+                                        src={`data:video/mp4;base64,${vid.video}`}
+                                        type="video/mp4"
+                                    />
+                                    Tu navegador no soporta el video.
+                                </video>
+                            ) : null
+                        )}
                     </div>
                 ) : (
                     <p>No hay videos disponibles.</p>
@@ -70,7 +81,11 @@ function Galeria() {
                 {imagenesProcesadas.length > 0 ? (
                     <div className="galeria-grid">
                         {imagenesProcesadas.map((img) => (
-                            <img key={img.id} src={img.url} alt={`Procesada ${img.id}`} />
+                            <img
+                                key={img.id}
+                                src={`data:image/png;base64,${img.imagen}`}
+                                alt={`Procesada ${img.id}`}
+                            />
                         ))}
                     </div>
                 ) : (
