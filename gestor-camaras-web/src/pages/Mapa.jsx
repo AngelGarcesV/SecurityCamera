@@ -7,76 +7,78 @@ import api from "../axiosConfig";
 import "@/styles/layout.css";
 import "@/styles/mapa.css";
 
-// Configurar ícono de marcador personalizado (opcional)
+// Ícono de cámara personalizado
 const camaraIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
 });
 
 function Mapa() {
-  const [camaras, setCamaras] = useState([]);
+    const [camaras, setCamaras] = useState([]);
+    const rol = localStorage.getItem("rol");
 
-  useEffect(() => {
-    // Datos de prueba para simular respuesta del backend
-    const datosPrueba = [
-      {
-        id: 1,
-        nombre: "Cámara Principal",
-        direccion: "Calle 1 #1-1",
-        coordenadaX: 4.653,
-        coordenadaY: -74.083
-      },
-      {
-        id: 2,
-        nombre: "Cámara Entrada",
-        direccion: "Carrera 2 #2-2",
-        coordenadaX: 4.657,
-        coordenadaY: -74.078
-      },
-      {
-        id: 3,
-        nombre: "Cámara Parqueadero",
-        direccion: "Av. 3 #3-3",
-        coordenadaX: 4.66,
-        coordenadaY: -74.08
-      }
-    ];
+    useEffect(() => {
+        const fetchCamaras = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const url = rol === "admin"
+                    ? "/camara/all"
+                    : `/camara/usuario/${localStorage.getItem("userId")}`;
 
-    setTimeout(() => setCamaras(datosPrueba), 500);
-  }, []);
+                const response = await api.get(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
 
-  return (
-    <div className="main-content mapa-container">
-      <h2 className="page-title">Ubicación de mis Cámaras</h2>
-      <p className="page-subtitle">Visualiza dónde están tus cámaras registradas.</p>
+                console.log("📡 Cámaras recibidas:", response.data);
+                setCamaras(response.data);
+            } catch (error) {
+                console.error("Error al obtener cámaras:", error);
+            }
+        };
 
-      <MapContainer
-        center={[4.655, -74.08]}
-        zoom={14}
-        style={{ height: "650px", width: "650px", borderRadius: "10px", marginTop: "20px" }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        fetchCamaras();
+    }, [rol]);
 
-        {camaras.map((cam) => (
-          <Marker
-            key={cam.id}
-            position={[cam.coordenadaX, cam.coordenadaY]}
-            icon={camaraIcon}
-          >
-            <Popup>
-              <strong>{cam.nombre}</strong><br />
-              {cam.direccion}
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </div>
-  );
+    return (
+        <div className="main-content mapa-container">
+            <h2 className="page-title">Ubicación de Cámaras</h2>
+            <p className="page-subtitle">
+                Visualiza dónde están tus cámaras registradas.
+            </p>
+
+            <MapContainer
+                center={[4.1502603, -73.6182865]}
+                zoom={14}
+                style={{ height: "850px", width: "400%", borderRadius: "10px", marginTop: "20px" }}
+            >
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+
+                {camaras
+                    .filter(cam => cam.coordenadax != null && cam.coordenaday != null)
+                    .map((cam) => (
+                    <Marker
+                        key={cam.id}
+                        position={[cam.coordenadax, cam.coordenaday]}
+                        icon={camaraIcon}
+                    >
+                        <Popup>
+                            <strong>{cam.nombre || "Cámara"}</strong>
+                            <br />
+                            {cam.descripcion}
+                        </Popup>
+                    </Marker>
+                ))}
+            </MapContainer>
+        </div>
+    );
 }
 
 export default Mapa;
+

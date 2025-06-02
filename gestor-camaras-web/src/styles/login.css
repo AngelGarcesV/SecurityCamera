@@ -111,6 +111,7 @@ body, html {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  color: #1f2937;
 }
 
 .checkbox-container {
@@ -150,6 +151,7 @@ body, html {
 }
 
 .register-container {
+  color: #1f2937;
   margin-top: 16px;
   text-align: center;
   font-size: 14px;

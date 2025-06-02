@@ -1,9 +1,6 @@
-import { Routes, Route, NavLink, useLocation, useNavigate } from "react-router-dom";
+// src/pages/usuarios/Usuarios.jsx
 import { useEffect } from "react";
-import CrearUsuario from "./CrearUsuario";
-import VerUsuarios from "./VerUsuarios";
-import EditarUsuario from "./EditarUsuario";
-import EliminarUsuario from "./EliminarUsuario";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "@/styles/layout.css";
 import "@/styles/usuarios.css";
 
@@ -14,17 +11,14 @@ function Usuarios() {
     useEffect(() => {
         const rol = localStorage.getItem("rol");
         if (rol !== "admin") {
-            // Si no es admin, redirigir a reportes
             navigate("/reportes");
         }
 
-        // Si estamos en /usuarios sin subruta, redirigir a /usuarios/ver
         if (location.pathname === "/usuarios") {
             navigate("/usuarios/ver");
         }
     }, [location.pathname, navigate]);
 
-    // Función para manejar la navegación
     const handleNavigation = (path) => {
         navigate(path);
     };
@@ -61,17 +55,13 @@ function Usuarios() {
                 </button>
             </div>
 
+            {/* Aquí se renderizan las subrutas */}
             <div className="stat-card">
-                <Routes>
-                    <Route path="/" element={<VerUsuarios />} />
-                    <Route path="crear" element={<CrearUsuario />} />
-                    <Route path="ver" element={<VerUsuarios />} />
-                    <Route path="editar" element={<EditarUsuario />} />
-                    <Route path="eliminar" element={<EliminarUsuario />} />
-                </Routes>
+                <Outlet />
             </div>
         </div>
     );
 }
 
 export default Usuarios;
+
