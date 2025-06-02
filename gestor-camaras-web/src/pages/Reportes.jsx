@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../axiosConfig'; // Usar api en lugar de axios directo
 import {
   BarChart,
   Bar,
@@ -28,32 +28,77 @@ function Reportes() {
         setLoading(true);
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
-        const urls = {
-          camaras: rol === 'admin'
-              ? '/api/camara/all'
-              : `/api/camara/usuario/${userId}`,
-          imagenes: rol === 'admin'
-              ? '/api/imagenes/all'
-              : `/api/imagenes/usuario/${userId}`,
-          videos: rol === 'admin'
-              ? '/api/video'
-              : `/api/video/usuario/${userId}`,
-        };
 
-        const [resCamaras, resImagenes, resVideos] = await Promise.all([
-          axios.get(urls.camaras, { headers }),
-          axios.get(urls.imagenes, { headers }),
-          axios.get(urls.videos, { headers }),
-        ]);
+        console.log('🔍 Usuario actual:', { rol, userId });
+
+        // Usar exactamente las mismas URLs que funcionan en Camaras.jsx
+        let camarasCount = 0;
+        let imagenesCount = 0;
+        let videosCount = 0;
+
+        // 1. Obtener cámaras (sabemos que esto funciona)
+        try {
+          const camarasUrl = rol === 'admin' ? '/camara/all' : `/camara/usuario/${userId}`;
+          console.log('🎯 Obteniendo cámaras de:', camarasUrl);
+
+          const resCamaras = await api.get(camarasUrl, { headers });
+          console.log('✅ Respuesta cámaras:', resCamaras.data);
+
+          camarasCount = Array.isArray(resCamaras.data) ? resCamaras.data.length : 0;
+        } catch (error) {
+          console.error('❌ Error cámaras:', error);
+          camarasCount = 0;
+        }
+
+        // 2. Para imágenes y videos, vamos a probar múltiples endpoints
+        const imagenesEndpoints = [
+          '/imagenes/all',
+          '/imagen/all',
+          '/images/all',
+          '/image/all'
+        ];
+
+        for (const endpoint of imagenesEndpoints) {
+          try {
+            console.log('🎯 Probando endpoint imágenes:', endpoint);
+            const resImagenes = await api.get(endpoint, { headers });
+            console.log('✅ Respuesta imágenes:', resImagenes.data);
+            imagenesCount = Array.isArray(resImagenes.data) ? resImagenes.data.length : 0;
+            break; // Si funciona, salir del loop
+          } catch (error) {
+            console.log('❌ Falló endpoint:', endpoint, error.response?.status);
+          }
+        }
+
+        const videosEndpoints = [
+          '/video/all',
+          '/video',
+          '/videos/all',
+          '/videos'
+        ];
+
+        for (const endpoint of videosEndpoints) {
+          try {
+            console.log('🎯 Probando endpoint videos:', endpoint);
+            const resVideos = await api.get(endpoint, { headers });
+            console.log('✅ Respuesta videos:', resVideos.data);
+            videosCount = Array.isArray(resVideos.data) ? resVideos.data.length : 0;
+            break; // Si funciona, salir del loop
+          } catch (error) {
+            console.log('❌ Falló endpoint:', endpoint, error.response?.status);
+          }
+        }
+
+        console.log('📊 Conteos finales:', { camarasCount, imagenesCount, videosCount });
 
         setDatos({
-          camaras: Array.isArray(resCamaras.data) ? resCamaras.data.length : 0,
-          imagenes: Array.isArray(resImagenes.data) ? resImagenes.data.length : 0,
-          videos: Array.isArray(resVideos.data) ? resVideos.data.length : 0,
+          camaras: camarasCount,
+          imagenes: imagenesCount,
+          videos: videosCount,
         });
         setError(null);
       } catch (error) {
-        console.error('Error al obtener datos del reporte:', error);
+        console.error('💥 Error general:', error);
         setError('Error al cargar los reportes');
         setDatos({ camaras: 0, imagenes: 0, videos: 0 });
       } finally {
@@ -79,10 +124,12 @@ function Reportes() {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
+
+      // URLs corregidas para búsqueda específica
       const [resCam, resImg, resVid] = await Promise.all([
-        axios.get(`/api/camara/${busqueda}`, { headers }),
-        axios.get(`/api/imagenes/camara/${busqueda}`, { headers }),
-        axios.get(`/api/video/camara/${busqueda}`, { headers }),
+        api.get(`/camara/${busqueda}`, { headers }),
+        api.get(`/imagen/camara/${busqueda}`, { headers }),  // Cambiado a imagen singular
+        api.get(`/video/camara/${busqueda}`, { headers }),
       ]);
 
       setDatosPorId({
