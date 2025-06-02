@@ -134,7 +134,7 @@ public class VideoController {
     @GetMapping("/camara/{camaraId}")
     public ResponseEntity<List<VideoDTO>> getVideosByCamaraId(@PathVariable Long camaraId) {
         List<VideoDTO> videoDTOs = videoService.GetVideosByCamaraId(camaraId).stream()
-                .map(VideoMapper::toVideoDTOWithoutContent) // Solo metadatos
+                .map(VideoMapper::toVideoDTO) // ✅ Incluye video en base64
                 .collect(Collectors.toList());
         return new ResponseEntity<>(videoDTOs, HttpStatus.OK);
     }

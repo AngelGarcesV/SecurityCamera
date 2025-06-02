@@ -79,4 +79,10 @@ public class ImagenProcesadaService {
     public List<ImagenProcesada> getImagenProcesadaByImagenId(Long imagenId) {
        return  imagenProcesadaRepository.findByImagenId(imagenId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron imágenes procesadas para la imagen con ID: " + imagenId));
     }
+
+    @Transactional(readOnly = true)
+    public List<ImagenProcesada> getImagenProcesadaByCamaraId(Long camaraId) {
+        return imagenProcesadaRepository.findByCamaraId(camaraId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron imágenes procesadas para la cámara con ID: " + camaraId));
+    }
 }

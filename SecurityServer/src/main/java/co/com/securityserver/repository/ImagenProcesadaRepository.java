@@ -15,4 +15,7 @@ public interface ImagenProcesadaRepository extends CrudRepository<ImagenProcesad
 
    @Query(value = "SELECT IP FROM ImagenProcesada IP WHERE IP.imagen.usuario.id = :usuarioId")
    Optional<List<ImagenProcesada>> findByUsuarioId(@Param("usuarioId") Long usuarioId);
+
+    @Query(value = "SELECT IP FROM ImagenProcesada IP WHERE IP.imagen.camara.id = :camaraId")
+    Optional<List<ImagenProcesada>> findByCamaraId(@Param("camaraId") Long camaraId);
 }

@@ -9,7 +9,8 @@ function Camaras() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [coordenadas, setCoordenadas] = useState({ x: "", y: "" });
   const [nuevaCamara, setNuevaCamara] = useState({
-    nombre: "",
+    ip: "",
+    puerto: "",
     descripcion: "",
     resolucion: ""
   });
@@ -25,19 +26,14 @@ function Camaras() {
     try {
       const userId = localStorage.getItem("userId");
       const rol = localStorage.getItem("rol");
-
       if (!userId || !rol) {
         alert("No se encontró el usuario. Intenta volver a iniciar sesión.");
         return;
       }
 
-      let endpoint = "";
-
-      if (rol === "admin") {
-        endpoint = "/camara/all";
-      } else {
-        endpoint = `/camara/usuario/${userId}`;
-      }
+      const endpoint = rol === "admin"
+          ? "/camara/all"
+          : `/camara/usuario/${userId}`;
 
       const response = await api.get(endpoint);
       setCamaras(response.data);
@@ -76,22 +72,21 @@ function Camaras() {
       alert("No se encontró el usuario. Intenta volver a iniciar sesión.");
       return;
     }
-
     const camaraData = {
-      nombre: nuevaCamara.nombre,
+      ip: nuevaCamara.ip,
+      puerto: parseInt(nuevaCamara.puerto, 10),
       descripcion: nuevaCamara.descripcion,
       resolucion: nuevaCamara.resolucion,
       coordenadax: coordenadas.x,
       coordenaday: coordenadas.y,
-      usuarioId: parseInt(userId)
+      usuarioId: parseInt(userId, 10)
     };
-
-    console.log("📦 Enviando a /camara/save:", camaraData);
 
     try {
       await api.post("/camara/save", camaraData);
       setNuevaCamara({
-        nombre: "",
+        ip: "",
+        puerto: "",
         descripcion: "",
         resolucion: ""
       });
@@ -120,10 +115,20 @@ function Camaras() {
         {mostrarFormulario && (
             <form onSubmit={handleAgregarCamara} className="form-container">
               <div className="form-group">
-                <label>Nombre</label>
+                <label>IP</label>
                 <input
-                    name="nombre"
-                    value={nuevaCamara.nombre}
+                    name="ip"
+                    value={nuevaCamara.ip}
+                    onChange={handleInputChange}
+                    required
+                />
+              </div>
+              <div className="form-group">
+                <label>Puerto</label>
+                <input
+                    name="puerto"
+                    type="number"
+                    value={nuevaCamara.puerto}
                     onChange={handleInputChange}
                     required
                 />
@@ -156,7 +161,8 @@ function Camaras() {
           <table className="data-table">
             <thead>
             <tr>
-              <th>Nombre</th>
+              <th>IP</th>
+              <th>Puerto</th>
               <th>Descripción</th>
               <th>Resolución</th>
               <th>Coordenada X</th>
@@ -167,7 +173,8 @@ function Camaras() {
             <tbody>
             {camaras.map((cam) => (
                 <tr key={cam.id}>
-                  <td>{cam.nombre}</td>
+                  <td>{cam.ip}</td>
+                  <td>{cam.puerto}</td>
                   <td>{cam.descripcion}</td>
                   <td>{cam.resolucion}</td>
                   <td>{cam.coordenadax}</td>

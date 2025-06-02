@@ -60,5 +60,12 @@ public class ImagenProcesadaController {
         return new ResponseEntity<>(imagenProcesadaDTOs, HttpStatus.OK);
     }
 
-
+    @GetMapping("/camara/{camaraId}")
+    public ResponseEntity<List<ImagenProcesadaDTO>> getImagenProcesadaByCamaraId(@PathVariable Long camaraId) {
+        List<ImagenProcesada> imagenesProcesadas = imagenProcesadaService.getImagenProcesadaByCamaraId(camaraId);
+        List<ImagenProcesadaDTO> imagenProcesadaDTOs = imagenesProcesadas.stream()
+                .map(ImagenProcesadaMapper::toImagenProcesadaDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(imagenProcesadaDTOs, HttpStatus.OK);
+    }
 }
