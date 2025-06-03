@@ -188,11 +188,17 @@
   cursor: not-allowed;
 }
 
+/* Formulario actions */
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+}
+
 .button-submit {
-  width: 100%;
+  flex: 1;
   padding: 15px;
   font-size: 16px;
-  margin-top: 10px;
 }
 
 .button-small {
@@ -364,4 +370,39 @@
 
 .camaras-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Agregar a tu archivo camaras.css */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.button-small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  min-width: auto;
+}
+
+.button-danger {
+  background-color: #dc3545;
+  color: white;
+  border: 1px solid #dc3545;
+}
+
+.button-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.button-secondary {
+  background-color: #6c757d;
+  color: white;
+  border: 1px solid #6c757d;
+}
+
+.button-secondary:hover {
+  background-color: #545b62;
+  border-color: #4e555b;
 }
