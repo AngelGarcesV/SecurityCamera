@@ -24,9 +24,13 @@ function Usuarios() {
     };
 
     return (
-        <div>
-            <h1 className="page-title">Panel de Usuarios</h1>
-            <p className="page-subtitle">Gestión de usuarios del sistema</p>
+        <div className="main-content">
+            <div className="page-header">
+                <div>
+                    <h2 className="page-title">Panel de Usuarios</h2>
+                    <p className="page-subtitle">Gestión de usuarios del sistema</p>
+                </div>
+            </div>
 
             <div className="nav-usuarios">
                 <button
@@ -56,12 +60,13 @@ function Usuarios() {
             </div>
 
             {/* Aquí se renderizan las subrutas */}
-            <div className="stat-card">
-                <Outlet />
+            <div className="table-container">
+                <div className="stat-card">
+                    <Outlet />
+                </div>
             </div>
         </div>
     );
 }
 
 export default Usuarios;
-

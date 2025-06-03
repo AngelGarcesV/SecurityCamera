@@ -41,19 +41,56 @@ function AppLayout() {
   return (
       <div className="app-layout">
         <aside className="sidebar">
+          {/* Header con título y info del usuario reorganizada */}
           <div className="sidebar-logo">
             <h2>CamGestor</h2>
-            <p>Rol: {rol || "Sin rol"}</p>
-            {usuario && <p>Usuario: {usuario}</p>}
+            <div className="sidebar-user-info">
+              <p className="user-role">Rol: {rol || "Sin rol"}</p>
+              {usuario && <p className="user-name">{usuario}</p>}
+            </div>
           </div>
+
+          {/* Menú de navegación con NavLinks que cubren toda el área */}
           <ul className="sidebar-menu">
-            <li><NavLink to="/reportes" className={({ isActive }) => (isActive ? "active" : "")}>Reportes</NavLink></li>
-            <li><NavLink to="/camaras" className={({ isActive }) => (isActive ? "active" : "")}>Cámaras</NavLink></li>
-            <li><NavLink to="/ubicacion" className={({ isActive }) => (isActive ? "active" : "")}>Ubicación Cámaras</NavLink></li>
+            <li>
+              <NavLink
+                  to="/reportes"
+                  className={({ isActive }) => (isActive ? "sidebar-link active" : "sidebar-link")}
+              >
+                Reportes
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                  to="/camaras"
+                  className={({ isActive }) => (isActive ? "sidebar-link active" : "sidebar-link")}
+              >
+                Cámaras
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                  to="/ubicacion"
+                  className={({ isActive }) => (isActive ? "sidebar-link active" : "sidebar-link")}
+              >
+                Ubicación Cámaras
+              </NavLink>
+            </li>
             {rol === "admin" && (
-                <li><NavLink to="/usuarios" className={({ isActive }) => (isActive ? "active" : "")}>Usuarios</NavLink></li>
+                <li>
+                  <NavLink
+                      to="/usuarios"
+                      className={({ isActive }) => (isActive ? "sidebar-link active" : "sidebar-link")}
+                  >
+                    Usuarios
+                  </NavLink>
+                </li>
             )}
-            <li><button onClick={handleLogout} className="button-logout">Cerrar sesión</button></li>
+            <li className="logout-item">
+              <button onClick={handleLogout} className="button-logout">
+                Cerrar sesión
+              </button>
+            </li>
           </ul>
         </aside>
         <main className="main-content">
