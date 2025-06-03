@@ -19,6 +19,10 @@ function Camaras() {
   const [loading, setLoading] = useState(true);
   const [ubicacionObtenida, setUbicacionObtenida] = useState(false);
 
+  // ✅ Estados para edición
+  const [camaraEditando, setCamaraEditando] = useState(null);
+  const [modoEdicion, setModoEdicion] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,44 +61,156 @@ function Camaras() {
               y: pos.coords.longitude
             };
             setCoordenadas(coords);
-            // Auto-llenar las coordenadas en el formulario
-            setNuevaCamara(prev => ({
-              ...prev,
-              coordenadax: coords.x.toString(),
-              coordenaday: coords.y.toString()
-            }));
+            if (!modoEdicion) {
+              setNuevaCamara(prev => ({
+                ...prev,
+                coordenadax: coords.x.toString(),
+                coordenaday: coords.y.toString()
+              }));
+            }
             setUbicacionObtenida(true);
           },
           (err) => {
             console.error("No se pudo obtener ubicación:", err);
-            // Coordenadas por defecto de Villavicencio si falla la geolocalización
             const defaultCoords = { x: 4.1502603, y: -73.6182865 };
             setCoordenadas(defaultCoords);
-            setNuevaCamara(prev => ({
-              ...prev,
-              coordenadax: defaultCoords.x.toString(),
-              coordenaday: defaultCoords.y.toString()
-            }));
+            if (!modoEdicion) {
+              setNuevaCamara(prev => ({
+                ...prev,
+                coordenadax: defaultCoords.x.toString(),
+                coordenaday: defaultCoords.y.toString()
+              }));
+            }
             setUbicacionObtenida(true);
           }
       );
     } else {
       alert("Geolocalización no soportada por tu navegador.");
-      // Coordenadas por defecto de Villavicencio
       const defaultCoords = { x: 4.1502603, y: -73.6182865 };
       setCoordenadas(defaultCoords);
-      setNuevaCamara(prev => ({
-        ...prev,
-        coordenadax: defaultCoords.x.toString(),
-        coordenaday: defaultCoords.y.toString()
-      }));
+      if (!modoEdicion) {
+        setNuevaCamara(prev => ({
+          ...prev,
+          coordenadax: defaultCoords.x.toString(),
+          coordenaday: defaultCoords.y.toString()
+        }));
+      }
       setUbicacionObtenida(true);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNuevaCamara((prev) => ({ ...prev, [name]: value }));
+    console.log(`📝 Campo ${name} cambiado a:`, value);
+
+    if (modoEdicion) {
+      setCamaraEditando((prev) => ({ ...prev, [name]: value }));
+    } else {
+      setNuevaCamara((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // ✅ Función para iniciar edición
+  const handleEditarCamara = (camara) => {
+    setCamaraEditando({
+      id: camara.id,
+      ip: camara.ip || "",
+      puerto: camara.puerto ? camara.puerto.toString() : "",
+      descripcion: camara.descripcion || "",
+      resolucion: camara.resolucion || "",
+      coordenadax: camara.coordenadax ? camara.coordenadax.toString() : "",
+      coordenaday: camara.coordenaday ? camara.coordenaday.toString() : "",
+      usuarioId: camara.usuarioId
+    });
+    setModoEdicion(true);
+    setMostrarFormulario(true);
+  };
+
+  // ✅ Función para cancelar edición
+  const handleCancelarEdicion = () => {
+    setCamaraEditando(null);
+    setModoEdicion(false);
+    setMostrarFormulario(false);
+    setNuevaCamara({
+      ip: "",
+      puerto: "",
+      descripcion: "",
+      resolucion: "",
+      coordenadax: coordenadas.x.toString(),
+      coordenaday: coordenadas.y.toString()
+    });
+  };
+
+  // ✅ Función para actualizar cámara
+  const handleActualizarCamara = async (e) => {
+    e.preventDefault();
+
+    if (!camaraEditando.ip || !camaraEditando.puerto) {
+      alert("IP y Puerto son campos obligatorios");
+      return;
+    }
+
+    if (!camaraEditando.coordenadax || !camaraEditando.coordenaday) {
+      alert("Las coordenadas son obligatorias");
+      return;
+    }
+
+    const camaraData = {
+      id: camaraEditando.id,
+      ip: camaraEditando.ip.trim(),
+      puerto: parseInt(camaraEditando.puerto, 10),
+      descripcion: camaraEditando.descripcion.trim(),
+      resolucion: camaraEditando.resolucion.trim(),
+      coordenadax: parseFloat(camaraEditando.coordenadax),
+      coordenaday: parseFloat(camaraEditando.coordenaday),
+      usuarioId: camaraEditando.usuarioId
+    };
+
+    console.log("📡 Actualizando cámara:", camaraData);
+
+    try {
+      const response = await api.put("/camara/update", camaraData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log("✅ Cámara actualizada exitosamente:", response.data);
+
+      handleCancelarEdicion();
+      fetchCamaras();
+      alert("Cámara actualizada exitosamente");
+
+    } catch (error) {
+      console.error("❌ Error al actualizar cámara:", error);
+      alert(`Error al actualizar cámara: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  // ✅ Función para eliminar cámara
+  const handleEliminarCamara = async (id, descripcion) => {
+    const confirmacion = window.confirm(
+        `¿Estás seguro de que quieres eliminar la cámara "${descripcion}"?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmacion) return;
+
+    try {
+      await api.delete(`/camara/${id}`);
+      console.log("✅ Cámara eliminada exitosamente");
+
+      fetchCamaras();
+      alert("Cámara eliminada exitosamente");
+
+    } catch (error) {
+      console.error("❌ Error al eliminar cámara:", error);
+
+      if (error.response?.status === 404) {
+        alert("Error: Cámara no encontrada");
+      } else {
+        alert(`Error al eliminar cámara: ${error.response?.data?.message || error.message}`);
+      }
+    }
   };
 
   const handleAgregarCamara = async (e) => {
@@ -105,18 +221,37 @@ function Camaras() {
       return;
     }
 
+    if (!nuevaCamara.ip || !nuevaCamara.puerto) {
+      alert("IP y Puerto son campos obligatorios");
+      return;
+    }
+
+    if (!nuevaCamara.coordenadax || !nuevaCamara.coordenaday) {
+      alert("Las coordenadas son obligatorias");
+      return;
+    }
+
     const camaraData = {
-      ip: nuevaCamara.ip,
+      ip: nuevaCamara.ip.trim(),
       puerto: parseInt(nuevaCamara.puerto, 10),
-      descripcion: nuevaCamara.descripcion,
-      resolucion: nuevaCamara.resolucion,
+      descripcion: nuevaCamara.descripcion.trim(),
+      resolucion: nuevaCamara.resolucion.trim(),
       coordenadax: parseFloat(nuevaCamara.coordenadax),
       coordenaday: parseFloat(nuevaCamara.coordenaday),
       usuarioId: parseInt(userId, 10)
     };
 
+    console.log("📡 Enviando datos de cámara:", camaraData);
+
     try {
-      await api.post("/camara/save", camaraData);
+      const response = await api.post("/camara/save", camaraData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log("✅ Cámara creada exitosamente:", response.data);
+
       setNuevaCamara({
         ip: "",
         puerto: "",
@@ -125,11 +260,22 @@ function Camaras() {
         coordenadax: coordenadas.x.toString(),
         coordenaday: coordenadas.y.toString()
       });
+
       setMostrarFormulario(false);
       fetchCamaras();
+      alert("Cámara agregada exitosamente");
+
     } catch (error) {
       console.error("❌ Error al crear cámara:", error);
-      alert("Error al crear cámara");
+      console.error("❌ Respuesta del servidor:", error.response?.data);
+
+      if (error.response?.status === 404) {
+        alert("Error 404: No se encontró el endpoint. Verifica la URL del servidor.");
+      } else if (error.response?.status === 400) {
+        alert(`Error de validación: ${error.response?.data?.message || 'Datos inválidos'}`);
+      } else {
+        alert(`Error al crear cámara: ${error.response?.data?.message || error.message}`);
+      }
     }
   };
 
@@ -137,6 +283,9 @@ function Camaras() {
     setUbicacionObtenida(false);
     obtenerUbicacionActual();
   };
+
+  // ✅ Determinar qué datos del formulario usar
+  const datosFormulario = modoEdicion ? camaraEditando : nuevaCamara;
 
   if (loading) {
     return (
@@ -157,7 +306,6 @@ function Camaras() {
 
   return (
       <div className="camaras-container">
-        {/* Header fijo */}
         <div className="camaras-header">
           <div className="page-header">
             <div>
@@ -166,28 +314,43 @@ function Camaras() {
             </div>
             <button
                 className="button-primary"
-                onClick={() => setMostrarFormulario(!mostrarFormulario)}
+                onClick={() => {
+                  if (modoEdicion) {
+                    handleCancelarEdicion();
+                  } else {
+                    setMostrarFormulario(!mostrarFormulario);
+                  }
+                }}
             >
-              {mostrarFormulario ? "Cancelar" : "Agregar Cámara"}
+              {mostrarFormulario
+                  ? (modoEdicion ? "Cancelar Edición" : "Cancelar")
+                  : "Agregar Cámara"
+              }
             </button>
           </div>
         </div>
 
-        {/* Contenido principal con scroll */}
         <div className="camaras-content">
           {mostrarFormulario && (
               <div className="form-section">
-                <h3 className="section-title">Nueva Cámara</h3>
-                <form onSubmit={handleAgregarCamara} className="form-container">
+                <h3 className="section-title">
+                  {modoEdicion ? "Editar Cámara" : "Nueva Cámara"}
+                </h3>
+                <form onSubmit={modoEdicion ? handleActualizarCamara : handleAgregarCamara} className="form-container">
                   <div className="form-row">
                     <div className="form-group">
                       <label>IP *</label>
                       <input
                           name="ip"
-                          value={nuevaCamara.ip}
+                          type="text"
+                          value={datosFormulario?.ip || ""}
                           onChange={handleInputChange}
                           placeholder="192.168.1.100"
                           required
+                          minLength="7"
+                          maxLength="15"
+                          pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
+                          title="Ingresa una IP válida (ej: 192.168.1.100)"
                       />
                     </div>
                     <div className="form-group">
@@ -195,10 +358,13 @@ function Camaras() {
                       <input
                           name="puerto"
                           type="number"
-                          value={nuevaCamara.puerto}
+                          value={datosFormulario?.puerto || ""}
                           onChange={handleInputChange}
                           placeholder="8080"
                           required
+                          min="1"
+                          max="65535"
+                          title="Ingresa un puerto válido (1-65535)"
                       />
                     </div>
                   </div>
@@ -207,7 +373,7 @@ function Camaras() {
                     <label>Descripción *</label>
                     <input
                         name="descripcion"
-                        value={nuevaCamara.descripcion}
+                        value={datosFormulario?.descripcion || ""}
                         onChange={handleInputChange}
                         placeholder="Cámara entrada principal"
                         required
@@ -218,7 +384,7 @@ function Camaras() {
                     <label>Resolución *</label>
                     <input
                         name="resolucion"
-                        value={nuevaCamara.resolucion}
+                        value={datosFormulario?.resolucion || ""}
                         onChange={handleInputChange}
                         placeholder="1920x1080"
                         required
@@ -228,14 +394,16 @@ function Camaras() {
                   <div className="coordenadas-section">
                     <div className="coordenadas-header">
                       <h4>Coordenadas de Ubicación</h4>
-                      <button
-                          type="button"
-                          className="button-secondary"
-                          onClick={obtenerNuevaUbicacion}
-                          disabled={!ubicacionObtenida}
-                      >
-                        📍 Actualizar Ubicación
-                      </button>
+                      {!modoEdicion && (
+                          <button
+                              type="button"
+                              className="button-secondary"
+                              onClick={obtenerNuevaUbicacion}
+                              disabled={!ubicacionObtenida}
+                          >
+                            📍 Actualizar Ubicación
+                          </button>
+                      )}
                     </div>
                     <div className="form-row">
                       <div className="form-group">
@@ -244,7 +412,7 @@ function Camaras() {
                             name="coordenadax"
                             type="number"
                             step="any"
-                            value={nuevaCamara.coordenadax}
+                            value={datosFormulario?.coordenadax || ""}
                             onChange={handleInputChange}
                             placeholder="4.1502603"
                             required
@@ -256,28 +424,38 @@ function Camaras() {
                             name="coordenaday"
                             type="number"
                             step="any"
-                            value={nuevaCamara.coordenaday}
+                            value={datosFormulario?.coordenaday || ""}
                             onChange={handleInputChange}
                             placeholder="-73.6182865"
                             required
                         />
                       </div>
                     </div>
-                    {ubicacionObtenida && (
+                    {ubicacionObtenida && !modoEdicion && (
                         <p className="ubicacion-info">
                           ✅ Ubicación obtenida automáticamente. Puedes modificar las coordenadas si es necesario.
                         </p>
                     )}
                   </div>
 
-                  <button type="submit" className="button-primary button-submit">
-                    Guardar Cámara
-                  </button>
+                  <div className="form-actions">
+                    <button type="submit" className="button-primary button-submit">
+                      {modoEdicion ? "Actualizar Cámara" : "Guardar Cámara"}
+                    </button>
+                    {modoEdicion && (
+                        <button
+                            type="button"
+                            className="button-secondary"
+                            onClick={handleCancelarEdicion}
+                        >
+                          Cancelar
+                        </button>
+                    )}
+                  </div>
                 </form>
               </div>
           )}
 
-          {/* Tabla de cámaras */}
           <div className="table-section">
             <h3 className="section-title">Cámaras Registradas ({camaras.length})</h3>
             <div className="table-container">
@@ -297,19 +475,36 @@ function Camaras() {
                 {camaras.length > 0 ? (
                     camaras.map((cam) => (
                         <tr key={cam.id}>
-                          <td>{cam.ip}</td>
-                          <td>{cam.puerto}</td>
+                          <td>{cam.ip || 'N/A'}</td>
+                          <td>{cam.puerto || 'N/A'}</td>
                           <td>{cam.descripcion}</td>
                           <td>{cam.resolucion}</td>
                           <td>{cam.coordenadax?.toFixed(6) || 'N/A'}</td>
                           <td>{cam.coordenaday?.toFixed(6) || 'N/A'}</td>
                           <td>
-                            <button
-                                className="button-primary button-small"
-                                onClick={() => navigate(`/camaras/${cam.id}/galeria`)}
-                            >
-                              Ver Galería
-                            </button>
+                            <div className="action-buttons">
+                              <button
+                                  className="button-primary button-small"
+                                  onClick={() => navigate(`/camaras/${cam.id}/galeria`)}
+                                  title="Ver galería"
+                              >
+                                📷 Ver
+                              </button>
+                              <button
+                                  className="button-secondary button-small"
+                                  onClick={() => handleEditarCamara(cam)}
+                                  title="Editar cámara"
+                              >
+                                ✏️ Editar
+                              </button>
+                              <button
+                                  className="button-danger button-small"
+                                  onClick={() => handleEliminarCamara(cam.id, cam.descripcion)}
+                                  title="Eliminar cámara"
+                              >
+                                🗑️ Eliminar
+                              </button>
+                            </div>
                           </td>
                         </tr>
                     ))
