@@ -16,6 +16,8 @@ public class DirectorCamaraSeguridad{
         builder.setCoordenaday(infoCamara.getCoordenaday());
         builder.setResolucion(infoCamara.getResolucion());
         builder.setUsuario(infoCamara.getUsuarioId());
+        builder.setIp(infoCamara.getIp());
+        builder.setPuerto(infoCamara.getPuerto());
         return builder.build();
     }
 }
