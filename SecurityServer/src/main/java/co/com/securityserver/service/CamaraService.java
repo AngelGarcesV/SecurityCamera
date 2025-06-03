@@ -64,7 +64,7 @@ public class CamaraService {
 
     @Transactional
     public Camara updateCamara(CamaraDTO camaraDTO) {
-        if (camaraRepo.existsById(camaraDTO.getId()) && usuarioRepository.existsById(camaraDTO.getId())) {
+        if (camaraRepo.existsById(camaraDTO.getId()) && usuarioRepository.existsById(camaraDTO.getUsuarioId())) {
             CamaraSeguridadBuilder builder = new CamaraSeguridadBuilder(usuarioService);
             DirectorCamaraSeguridad director = new DirectorCamaraSeguridad(builder);
             Camara camara = director.ConstruirCamara(camaraDTO);

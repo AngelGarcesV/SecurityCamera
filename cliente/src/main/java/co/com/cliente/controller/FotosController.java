@@ -29,7 +29,6 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.Arrays;
 import java.util.concurrent.Executors;
 
 public class FotosController implements Initializable {
@@ -44,203 +43,517 @@ public class FotosController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        executorService = Executors.newFixedThreadPool(4);
-
-        // Asegurarnos de que el JWT esté configurado
-        configurarJWT();
-
-        photoGrid.setHgap(20);
-        photoGrid.setVgap(20);
-        photoGrid.setPadding(new Insets(20, 20, 20, 20));
-
+        initializeExecutor();
+        configureJWT();
+        configurePhotoGrid();
         loadImages();
     }
 
-    private void configurarJWT() {
-        // Aquí se configuraría el JWT en el HttpService
-        // Suponemos que ya está configurado o que se obtiene de alguna parte
+    private void initializeExecutor() {
+        executorService = Executors.newFixedThreadPool(4);
+    }
 
-        // Si no está configurado y es necesario, podemos añadir código
-        // para obtenerlo de alguna fuente (sesión, preferencias, etc.)
-        if (HttpService.getInstance().getJwtToken() == null ||
-                HttpService.getInstance().getJwtToken().isEmpty()) {
-            // Obtener JWT de alguna fuente y configurarlo
-            // Por ejemplo: HttpService.getInstance().setJwtToken(obtenerJWTDeSesion());
+    private void configureJWT() {
+        if (isJWTTokenMissing()) {
+            // Configurar JWT si es necesario
         }
+    }
+
+    private boolean isJWTTokenMissing() {
+        return HttpService.getInstance().getJwtToken() == null ||
+                HttpService.getInstance().getJwtToken().isEmpty();
+    }
+
+    private void configurePhotoGrid() {
+        photoGrid.setHgap(20);
+        photoGrid.setVgap(20);
+        photoGrid.setPadding(new Insets(20, 20, 20, 20));
     }
 
     private void loadImages() {
+        String userId = getUserId();
+        if (userId == null) {
+            showUserIdError();
+            return;
+        }
+
+        loadImagesFromServer(userId);
+    }
+
+    private String getUserId() {
+        return HttpService.getInstance().getUserIdFromClaims();
+    }
+
+    private void showUserIdError() {
+        showAlert(Alert.AlertType.ERROR, "Error", "No se pudo obtener el ID del usuario.");
+    }
+
+    private void loadImagesFromServer(String userId) {
         try {
-            String userId = HttpService.getInstance().getUserIdFromClaims();
-            if (userId == null || userId.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Error", "No se pudo obtener el ID del usuario.");
-                return;
-            }
-            String jsonResponse = HttpService.getInstance().sendGetRequest(API_BASE_URL + "/usuario/" + userId);
-            currentImages = Arrays.asList(JsonResponseHandler.parseResponse(jsonResponse, ImagenDTO[].class));
+            String jsonResponse = sendGetRequest(userId);
+            List<ImagenDTO> images = parseImageResponse(jsonResponse);
+            updateCurrentImages(images);
             displayImages();
         } catch (Exception e) {
-            e.printStackTrace();
-            Platform.runLater(() -> {
-                photoGrid.getChildren().clear();
-                Label errorLabel;
-
-                // Verificar si el error es 404 (no se encontraron imágenes)
-                if (e.getMessage() != null && e.getMessage().contains("404")) {
-                    errorLabel = new Label("No se han tomado imágenes");
-                } else {
-                    errorLabel = new Label("Error al cargar las imágenes: " + e.getMessage());
-                }
-
-                errorLabel.setFont(Font.font("System", FontWeight.NORMAL, 14));
-                errorLabel.setStyle("-fx-text-fill: #888888;");
-                photoGrid.getChildren().add(errorLabel);
-            });
+            handleImageLoadError(e);
         }
     }
 
-    private void displayImages() {
+    private String sendGetRequest(String userId) throws Exception {
+        return HttpService.getInstance().sendGetRequest(API_BASE_URL + "/usuario/" + userId);
+    }
+
+    private List<ImagenDTO> parseImageResponse(String jsonResponse) throws Exception {
+        return Arrays.asList(JsonResponseHandler.parseResponse(jsonResponse, ImagenDTO[].class));
+    }
+
+    private void updateCurrentImages(List<ImagenDTO> images) {
+        currentImages = images;
+    }
+
+    private void handleImageLoadError(Exception e) {
+        e.printStackTrace();
         Platform.runLater(() -> {
-            photoGrid.getChildren().clear();
-
-            if (currentImages.isEmpty()) {
-                Label noImagesLabel = new Label("No se han tomado imágenes");
-                noImagesLabel.setFont(Font.font("System", FontWeight.NORMAL, 14));
-                noImagesLabel.setStyle("-fx-text-fill: #888888;");
-                photoGrid.getChildren().add(noImagesLabel);
-                return;
-            }
-
-            for (ImagenDTO imagen : currentImages) {
-                addPhotoToGrid(imagen);
+            clearPhotoGrid();
+            if (isNotFoundError(e)) {
+                showNoImagesMessage();
+            } else {
+                showErrorMessage(e.getMessage());
             }
         });
     }
 
-    private void addPhotoToGrid(ImagenDTO imagen) {
-        // Contenedor principal para cada foto
-        VBox photoContainer = new VBox();
-        photoContainer.setAlignment(Pos.CENTER);
-        photoContainer.setSpacing(5);
-        photoContainer.setPrefWidth(THUMBNAIL_SIZE);
+    private boolean isNotFoundError(Exception e) {
+        return e.getMessage() != null && e.getMessage().contains("404");
+    }
 
-        // Contenedor para la imagen
+    private void displayImages() {
+        Platform.runLater(() -> {
+            clearPhotoGrid();
+
+            if (hasNoImages()) {
+                showNoImagesMessage();
+                return;
+            }
+
+            addImagesToGrid();
+        });
+    }
+
+    private void clearPhotoGrid() {
+        photoGrid.getChildren().clear();
+    }
+
+    private boolean hasNoImages() {
+        return currentImages.isEmpty();
+    }
+
+    private void showNoImagesMessage() {
+        Label noImagesLabel = createNoImagesLabel();
+        photoGrid.getChildren().add(noImagesLabel);
+    }
+
+    private Label createNoImagesLabel() {
+        Label label = new Label("No se han tomado imágenes");
+        label.setFont(Font.font("System", FontWeight.NORMAL, 14));
+        label.setStyle("-fx-text-fill: #888888;");
+        return label;
+    }
+
+    private void showErrorMessage(String message) {
+        Label errorLabel = createErrorLabel(message);
+        photoGrid.getChildren().add(errorLabel);
+    }
+
+    private Label createErrorLabel(String message) {
+        Label errorLabel = new Label("Error al cargar las imágenes: " + message);
+        errorLabel.setFont(Font.font("System", FontWeight.NORMAL, 14));
+        errorLabel.setStyle("-fx-text-fill: #888888;");
+        return errorLabel;
+    }
+
+    private void addImagesToGrid() {
+        for (ImagenDTO imagen : currentImages) {
+            addSingleImageToGrid(imagen);
+        }
+    }
+
+    private void addSingleImageToGrid(ImagenDTO imagen) {
+        VBox photoContainer = createPhotoContainer(imagen);
+        photoGrid.getChildren().add(photoContainer);
+        loadImageAsync(photoContainer, imagen);
+    }
+
+    private VBox createPhotoContainer(ImagenDTO imagen) {
+        VBox photoContainer = createBaseContainer();
+
+        StackPane photoItem = createPhotoPlaceholder();
+        Label nameLabel = createNameLabel(imagen);
+        HBox buttonBox = createActionButtons(imagen);
+
+        photoContainer.getChildren().addAll(photoItem, nameLabel, buttonBox);
+        return photoContainer;
+    }
+
+    private VBox createBaseContainer() {
+        VBox container = new VBox();
+        container.setAlignment(Pos.CENTER);
+        container.setSpacing(5);
+        container.setPrefWidth(THUMBNAIL_SIZE);
+        return container;
+    }
+
+    private StackPane createPhotoPlaceholder() {
         StackPane photoItem = new StackPane();
         photoItem.setPrefSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE);
         photoItem.setStyle("-fx-background-color: #e0e0e0;");
+        return photoItem;
+    }
 
-        // Label para el nombre de la foto
+    private Label createNameLabel(ImagenDTO imagen) {
         Label nameLabel = new Label(imagen.getNombre());
         nameLabel.setMaxWidth(THUMBNAIL_SIZE);
         nameLabel.setWrapText(true);
         nameLabel.setTextAlignment(TextAlignment.CENTER);
         nameLabel.setAlignment(Pos.CENTER);
+        return nameLabel;
+    }
 
-        // HBox para los botones - ahora con 3 botones
+    private HBox createActionButtons(ImagenDTO imagen) {
+        HBox buttonBox = createButtonContainer();
+
+        Button editButton = createEditButton(imagen);
+        Button updateButton = createUpdateButton(imagen);
+        Button deleteButton = createDeleteButton(imagen);
+
+        buttonBox.getChildren().addAll(editButton, updateButton, deleteButton);
+        return buttonBox;
+    }
+
+    private HBox createButtonContainer() {
         HBox buttonBox = new HBox();
         buttonBox.setSpacing(3);
         buttonBox.setAlignment(Pos.CENTER);
+        return buttonBox;
+    }
 
-        // Botón de editar foto
+    private Button createEditButton(ImagenDTO imagen) {
         Button editButton = new Button("Editar");
         editButton.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-size: 10px;");
         editButton.setPrefWidth(60);
-        editButton.setOnAction(e -> openEditarFotosView(imagen));
+        editButton.setOnAction(e -> handleEditImage(imagen));
+        return editButton;
+    }
 
-        // Botón de actualizar
+    private Button createUpdateButton(ImagenDTO imagen) {
         Button updateButton = new Button("Actualizar");
         updateButton.setStyle("-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-size: 10px;");
         updateButton.setPrefWidth(60);
-        updateButton.setOnAction(e -> showUpdateDialog(imagen));
+        updateButton.setOnAction(e -> handleUpdateImage(imagen));
+        return updateButton;
+    }
 
-        // Botón de eliminar
+    private Button createDeleteButton(ImagenDTO imagen) {
         Button deleteButton = new Button("Eliminar");
         deleteButton.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 10px;");
         deleteButton.setPrefWidth(60);
-        deleteButton.setOnAction(e -> confirmAndDelete(imagen));
+        deleteButton.setOnAction(e -> handleDeleteImage(imagen));
+        return deleteButton;
+    }
 
-        // Agregar botones al HBox
-        buttonBox.getChildren().addAll(editButton, updateButton, deleteButton);
-
-        // Agregar todo al contenedor principal
-        photoContainer.getChildren().addAll(photoItem, nameLabel, buttonBox);
-
-        // Agregar el contenedor principal al grid
-        photoGrid.getChildren().add(photoContainer);
-
+    private void loadImageAsync(VBox container, ImagenDTO imagen) {
         executorService.submit(() -> {
             try {
-                byte[] imageBytes = imagen.getImagen();
-                Image image = new Image(new ByteArrayInputStream(imageBytes),
-                        THUMBNAIL_SIZE, THUMBNAIL_SIZE, true, true);
-
-                Platform.runLater(() -> {
-                    try {
-                        ImageView imageView = new ImageView(image);
-                        imageView.setFitWidth(THUMBNAIL_SIZE);
-                        imageView.setFitHeight(THUMBNAIL_SIZE);
-                        imageView.setPreserveRatio(true);
-
-                        photoItem.getChildren().clear();
-                        photoItem.getChildren().add(imageView);
-
-                        String date = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(imagen.getFecha());
-                        Tooltip tooltip = new Tooltip(
-                                imagen.getNombre() + "\n" + date);
-                        Tooltip.install(photoItem, tooltip);
-
-                        photoItem.setOnMouseClicked(event -> viewFullImage(imagen));
-
-                    } catch (Exception e) {
-                        photoItem.setStyle("-fx-background-color: #cccccc;");
-                    }
-                });
+                Image image = createThumbnailImage(imagen);
+                Platform.runLater(() -> updateContainerWithImage(container, image, imagen));
             } catch (Exception e) {
-                Platform.runLater(() -> {
-                    photoItem.setStyle("-fx-background-color: #cccccc;");
-                });
+                Platform.runLater(() -> handleImageLoadFailure(container));
             }
         });
     }
 
-    private void openEditarFotosView(ImagenDTO imagen) {
+    private Image createThumbnailImage(ImagenDTO imagen) {
+        byte[] imageBytes = imagen.getImagen();
+        ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+        return new Image(bis, THUMBNAIL_SIZE, THUMBNAIL_SIZE, true, true);
+    }
+
+    private void updateContainerWithImage(VBox container, Image image, ImagenDTO imagen) {
         try {
-            // Cargar la vista de editar fotos
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
-            Parent editView = loader.load();
+            StackPane photoItem = getPhotoItemFromContainer(container);
+            ImageView imageView = createImageView(image);
 
-            // Obtener el controlador de la vista de edición
-            Object controller = loader.getController();
+            updatePhotoItem(photoItem, imageView);
+            addImageTooltip(photoItem, imagen);
+            addImageClickHandler(photoItem, imagen);
 
-            // Si el controlador tiene un método para establecer la imagen, llamarlo
-            if (controller != null) {
-                try {
-                    // Usar reflexión para llamar al método setImagenToEdit si existe
-                    controller.getClass().getMethod("setImagenToEdit", ImagenDTO.class).invoke(controller, imagen);
-                } catch (Exception e) {
-                    System.out.println("El controlador no tiene método setImagenToEdit: " + e.getMessage());
-                }
-            }
-
-            // Obtener el StackPane principal de la aplicación
-            StackPane contentArea = getContentArea();
-            if (contentArea != null) {
-                contentArea.getChildren().clear();
-                contentArea.getChildren().add(editView);
-
-                // Actualizar el título si es posible
-                updateTitle("EDITAR FOTOS");
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo abrir la vista de edición: " + e.getMessage());
+        } catch (Exception e) {
+            handleImageLoadFailure(container);
         }
     }
 
-    private StackPane getContentArea() {
+    private StackPane getPhotoItemFromContainer(VBox container) {
+        return (StackPane) container.getChildren().get(0);
+    }
+
+    private ImageView createImageView(Image image) {
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(THUMBNAIL_SIZE);
+        imageView.setFitHeight(THUMBNAIL_SIZE);
+        imageView.setPreserveRatio(true);
+        return imageView;
+    }
+
+    private void updatePhotoItem(StackPane photoItem, ImageView imageView) {
+        photoItem.getChildren().clear();
+        photoItem.getChildren().add(imageView);
+    }
+
+    private void addImageTooltip(StackPane photoItem, ImagenDTO imagen) {
+        String date = formatImageDate(imagen);
+        Tooltip tooltip = new Tooltip(imagen.getNombre() + "\n" + date);
+        Tooltip.install(photoItem, tooltip);
+    }
+
+    private String formatImageDate(ImagenDTO imagen) {
+        return new SimpleDateFormat("dd/MM/yyyy HH:mm").format(imagen.getFecha());
+    }
+
+    private void addImageClickHandler(StackPane photoItem, ImagenDTO imagen) {
+        photoItem.setOnMouseClicked(event -> handleImageClick(imagen));
+    }
+
+    private void handleImageLoadFailure(VBox container) {
+        StackPane photoItem = getPhotoItemFromContainer(container);
+        photoItem.setStyle("-fx-background-color: #cccccc;");
+    }
+
+    private void handleEditImage(ImagenDTO imagen) {
         try {
-            // Navegar por la jerarquía de nodos para encontrar el contentArea
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
+            Parent editView = loader.load();
+
+            Object controller = loader.getController();
+            if (controller != null) {
+                setImageToEdit(controller, imagen);
+            }
+
+            navigateToEditView(editView);
+            updateApplicationTitle("EDITAR FOTOS");
+        } catch (IOException e) {
+            showEditLoadError(e);
+        }
+    }
+
+    private void setImageToEdit(Object controller, ImagenDTO imagen) {
+        try {
+            controller.getClass().getMethod("setImagenToEdit", ImagenDTO.class).invoke(controller, imagen);
+        } catch (Exception e) {
+            System.out.println("Error al configurar imagen para editar: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void navigateToEditView(Parent editView) {
+        StackPane contentArea = findContentArea();
+        if (contentArea != null) {
+            replaceContent(contentArea, editView);
+        }
+    }
+
+    private void updateApplicationTitle(String title) {
+        try {
+            Parent root = photoGrid.getScene().getRoot();
+            Label titleLabel = findTitleLabel(root);
+            if (titleLabel != null) {
+                titleLabel.setText(title);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showEditLoadError(IOException e) {
+        e.printStackTrace();
+        showAlert(Alert.AlertType.ERROR, "Error", "No se pudo abrir la vista de edición: " + e.getMessage());
+    }
+
+    private void handleUpdateImage(ImagenDTO imagen) {
+        Dialog<Pair<String, String>> dialog = createUpdateDialog(imagen);
+        Optional<Pair<String, String>> result = dialog.showAndWait();
+
+        result.ifPresent(nameResolution ->
+                updateImageOnServer(imagen, nameResolution.getKey(), nameResolution.getValue()));
+    }
+
+    private Dialog<Pair<String, String>> createUpdateDialog(ImagenDTO imagen) {
+        Dialog<Pair<String, String>> dialog = new Dialog<>();
+        dialog.setTitle("Actualizar Imagen");
+        dialog.setHeaderText("Modificar nombre y resolución");
+
+        ButtonType updateButtonType = new ButtonType("Actualizar", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
+
+        GridPane grid = createUpdateDialogGrid(imagen);
+        dialog.getDialogPane().setContent(grid);
+
+        configureDialogResultConverter(dialog, updateButtonType, grid);
+        return dialog;
+    }
+
+    private GridPane createUpdateDialogGrid(ImagenDTO imagen) {
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField nombreField = new TextField(imagen.getNombre());
+        TextField resolucionField = new TextField(imagen.getResolucion());
+
+        grid.add(new Label("Nombre:"), 0, 0);
+        grid.add(nombreField, 1, 0);
+        grid.add(new Label("Resolución:"), 0, 1);
+        grid.add(resolucionField, 1, 1);
+
+        return grid;
+    }
+
+    private void configureDialogResultConverter(Dialog<Pair<String, String>> dialog,
+                                                ButtonType updateButtonType, GridPane grid) {
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == updateButtonType) {
+                TextField nombreField = (TextField) grid.getChildren().get(1);
+                TextField resolucionField = (TextField) grid.getChildren().get(3);
+                return new Pair<>(nombreField.getText(), resolucionField.getText());
+            }
+            return null;
+        });
+    }
+
+    private void updateImageOnServer(ImagenDTO imagen, String newName, String newResolution) {
+        try {
+            JSONObject jsonRequest = buildUpdateRequest(imagen, newName, newResolution);
+            sendUpdateRequest(jsonRequest);
+            handleUpdateSuccess();
+        } catch (Exception e) {
+            handleUpdateError(e);
+        }
+    }
+
+    private JSONObject buildUpdateRequest(ImagenDTO imagen, String newName, String newResolution) {
+        JSONObject jsonRequest = new JSONObject();
+        jsonRequest.put("id", imagen.getId());
+        jsonRequest.put("imagen", imagen.getImagen());
+        jsonRequest.put("nombre", newName);
+        jsonRequest.put("resolucion", newResolution);
+        jsonRequest.put("fecha", imagen.getFecha().getTime());
+        jsonRequest.put("camaraId", imagen.getCamaraId());
+        jsonRequest.put("usuarioId", imagen.getUsuarioId());
+        return jsonRequest;
+    }
+
+    private void sendUpdateRequest(JSONObject jsonRequest) throws Exception {
+        HttpService.getInstance().sendPutRequest(API_BASE_URL + "/update", jsonRequest.toString());
+    }
+
+    private void handleUpdateSuccess() {
+        loadImages();
+        showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen actualizada correctamente");
+    }
+
+    private void handleUpdateError(Exception e) {
+        e.printStackTrace();
+        showAlert(Alert.AlertType.ERROR, "Error", "No se pudo actualizar la imagen: " + e.getMessage());
+    }
+
+    private void handleDeleteImage(ImagenDTO imagen) {
+        boolean confirmed = showDeleteConfirmation();
+        if (confirmed) {
+            deleteImageFromServer(imagen);
+        }
+    }
+
+    private boolean showDeleteConfirmation() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar eliminación");
+        alert.setHeaderText("¿Está seguro de eliminar esta imagen?");
+        alert.setContentText("Esta acción no se puede deshacer.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == ButtonType.OK;
+    }
+
+    private void deleteImageFromServer(ImagenDTO imagen) {
+        try {
+            sendDeleteRequest(imagen.getId());
+            removeImageFromList(imagen);
+            refreshImageDisplay();
+            showDeleteSuccess();
+        } catch (Exception e) {
+            handleDeleteError(e);
+        }
+    }
+
+    private void sendDeleteRequest(Long imageId) throws Exception {
+        HttpService.getInstance().sendDeleteRequest(API_BASE_URL + "/" + imageId);
+    }
+
+    private void removeImageFromList(ImagenDTO imagen) {
+        List<ImagenDTO> updatedImages = new ArrayList<>();
+        for (ImagenDTO img : currentImages) {
+            if (!img.getId().equals(imagen.getId())) {
+                updatedImages.add(img);
+            }
+        }
+        currentImages = updatedImages;
+    }
+
+    private void refreshImageDisplay() {
+        displayImages();
+    }
+
+    private void showDeleteSuccess() {
+        showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen eliminada correctamente");
+    }
+
+    private void handleDeleteError(Exception e) {
+        e.printStackTrace();
+        showAlert(Alert.AlertType.ERROR, "Error", "No se pudo eliminar la imagen: " + e.getMessage());
+    }
+
+    private void handleImageClick(ImagenDTO imagen) {
+        try {
+            File tempFile = createTempImageFile();
+            writeImageToFile(tempFile, imagen);
+            openImageFile(tempFile);
+        } catch (Exception e) {
+            handleImageOpenError(e);
+        }
+    }
+
+    private File createTempImageFile() throws Exception {
+        File tempFile = File.createTempFile("image_", ".png");
+        tempFile.deleteOnExit();
+        return tempFile;
+    }
+
+    private void writeImageToFile(File tempFile, ImagenDTO imagen) throws Exception {
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(imagen.getImagen());
+        }
+    }
+
+    private void openImageFile(File tempFile) throws Exception {
+        java.awt.Desktop.getDesktop().open(tempFile);
+    }
+
+    private void handleImageOpenError(Exception e) {
+        e.printStackTrace();
+        showAlert(Alert.AlertType.ERROR, "Error", "No se pudo abrir la imagen: " + e.getMessage());
+    }
+
+    private StackPane findContentArea() {
+        try {
             Parent root = photoGrid.getScene().getRoot();
             return findStackPane(root);
         } catch (Exception e) {
@@ -250,7 +563,8 @@ public class FotosController implements Initializable {
     }
 
     private StackPane findStackPane(Parent parent) {
-        if (parent instanceof StackPane && ((StackPane) parent).getId() != null &&
+        if (parent instanceof StackPane &&
+                ((StackPane) parent).getId() != null &&
                 ((StackPane) parent).getId().equals("contentArea")) {
             return (StackPane) parent;
         }
@@ -266,20 +580,14 @@ public class FotosController implements Initializable {
         return null;
     }
 
-    private void updateTitle(String title) {
-        try {
-            Parent root = photoGrid.getScene().getRoot();
-            Label titleLabel = findTitleLabel(root);
-            if (titleLabel != null) {
-                titleLabel.setText(title);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private void replaceContent(StackPane contentArea, Parent newView) {
+        contentArea.getChildren().clear();
+        contentArea.getChildren().add(newView);
     }
 
     private Label findTitleLabel(Parent parent) {
-        if (parent instanceof Label && ((Label) parent).getId() != null &&
+        if (parent instanceof Label &&
+                ((Label) parent).getId() != null &&
                 ((Label) parent).getId().equals("titleLabel")) {
             return (Label) parent;
         }
@@ -293,136 +601,6 @@ public class FotosController implements Initializable {
             }
         }
         return null;
-    }
-
-    private void showUpdateDialog(ImagenDTO imagen) {
-        // Crear un diálogo personalizado
-        Dialog<Pair<String, String>> dialog = new Dialog<>();
-        dialog.setTitle("Actualizar Imagen");
-        dialog.setHeaderText("Modificar nombre y resolución");
-
-        // Configurar botones
-        ButtonType updateButtonType = new ButtonType("Actualizar", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
-
-        // Crear campos de formulario
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField nombreField = new TextField(imagen.getNombre());
-        TextField resolucionField = new TextField(imagen.getResolucion());
-
-        grid.add(new Label("Nombre:"), 0, 0);
-        grid.add(nombreField, 1, 0);
-        grid.add(new Label("Resolución:"), 0, 1);
-        grid.add(resolucionField, 1, 1);
-
-        dialog.getDialogPane().setContent(grid);
-
-        // Establecer el resultado cuando se hace clic en el botón actualizar
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == updateButtonType) {
-                return new Pair<>(nombreField.getText(), resolucionField.getText());
-            }
-            return null;
-        });
-
-        // Mostrar el diálogo y procesar el resultado
-        Optional<Pair<String, String>> result = dialog.showAndWait();
-        result.ifPresent(nombreResolucion -> {
-            updateImage(imagen, nombreResolucion.getKey(), nombreResolucion.getValue());
-        });
-    }
-
-    private void updateImage(ImagenDTO imagen, String nuevoNombre, String nuevaResolucion) {
-        try {
-            JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put("id", imagen.getId());
-            jsonRequest.put("imagen", imagen.getImagen());
-            jsonRequest.put("nombre", nuevoNombre);
-            jsonRequest.put("resolucion", nuevaResolucion);
-            jsonRequest.put("fecha", imagen.getFecha().getTime());
-            jsonRequest.put("camaraId", imagen.getCamaraId());
-            jsonRequest.put("usuarioId", imagen.getUsuarioId());
-
-            // No incluimos la imagen completa para evitar enviar grandes cantidades de datos
-
-            // Enviar solicitud PUT
-            HttpService.getInstance().sendPutRequest(
-                    API_BASE_URL + "/update",
-                    jsonRequest.toString()
-            );
-
-            // Recargar imágenes después de actualizar
-            loadImages();
-
-            // Mostrar mensaje de éxito
-            showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen actualizada correctamente");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo actualizar la imagen: " + e.getMessage());
-        }
-    }
-
-    private void confirmAndDelete(ImagenDTO imagen) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar eliminación");
-        alert.setHeaderText("¿Está seguro de eliminar esta imagen?");
-        alert.setContentText("Esta acción no se puede deshacer.");
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            deleteImage(imagen);
-        }
-    }
-
-    private void deleteImage(ImagenDTO imagen) {
-        try {
-            // Enviar solicitud DELETE
-            HttpService.getInstance().sendDeleteRequest(API_BASE_URL + "/" + imagen.getId());
-
-            // Crear una nueva lista sin la imagen eliminada
-            List<ImagenDTO> updatedImages = new ArrayList<>();
-            for (ImagenDTO img : currentImages) {
-                if (!img.getId().equals(imagen.getId())) {
-                    updatedImages.add(img);
-                }
-            }
-
-            // Actualizar la lista actual y redibujar
-            currentImages = updatedImages;
-            displayImages();
-
-            // Mostrar mensaje de éxito
-            showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen eliminada correctamente");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo eliminar la imagen: " + e.getMessage());
-        }
-    }
-
-    private void viewFullImage(ImagenDTO imagen) {
-        try {
-            // Create a temporary file
-            File tempFile = File.createTempFile("image_", ".png");
-            tempFile.deleteOnExit();
-
-            // Write the byte array to the file
-            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                fos.write(imagen.getImagen());
-            }
-
-            // Open the file
-            java.awt.Desktop.getDesktop().open(tempFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error",
-                    "No se pudo abrir la imagen: " + e.getMessage());
-        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

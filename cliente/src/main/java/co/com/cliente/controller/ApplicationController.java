@@ -124,7 +124,7 @@ public class ApplicationController implements Initializable {
         }
     }
 
-    // Método público para cargar la vista de editar fotos desde FotosController
+
     public void loadEditarFotosView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
