@@ -361,7 +361,7 @@ public class MultiCameraController implements Initializable {
             recordAllButton.setStyle("-fx-background-color: #ea4335; -fx-text-fill: white; -fx-font-weight: bold;");
             recordingStatusLabel.setText("Grabando " + activeCameras.size() + " cámaras...");
             recordingStatusLabel.setTextFill(Color.RED);
-            snapshotAllButton.setDisable(true);
+            snapshotAllButton.setDisable(false);
         });
 
         startRecordingTimer();

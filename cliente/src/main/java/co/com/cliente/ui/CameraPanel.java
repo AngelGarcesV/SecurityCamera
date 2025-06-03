@@ -273,7 +273,7 @@ public class CameraPanel {
             Platform.runLater(() -> {
                 recordButton.setText("⏹");
                 recordButton.setStyle("-fx-background-color: #ea4335; -fx-text-fill: white; -fx-font-size: 10px;");
-                snapshotButton.setDisable(true);
+                snapshotButton.setDisable(false);
             });
 
             // Iniciar timer de segmentos (60 segundos)

@@ -9,7 +9,7 @@ function Galeria() {
     const [camara, setCamara] = useState(null);
     const [imagenes, setImagenes] = useState([]);
     const [videos, setVideos] = useState([]);
-    const [imagenesProcesadas, setImagenesProcesadas] = useState([]);
+    //const [imagenesProcesadas, setImagenesProcesadas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -17,17 +17,17 @@ function Galeria() {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [resCam, resImg, resVid, resProc] = await Promise.all([
+                const [resCam, resImg, resVid] = await Promise.all([
                     api.get(`/camara/${id}`),
                     api.get(`/imagenes/camara/${id}`),
                     api.get(`/video/camara/${id}`),
-                    api.get(`/imagenesProcesadas/camara/${id}`)
+                    //api.get(`/imagenesProcesadas/camara/${id}`)
                 ]);
 
                 setCamara(resCam.data);
                 setImagenes(Array.isArray(resImg.data) ? resImg.data : []);
                 setVideos(Array.isArray(resVid.data) ? resVid.data : []);
-                setImagenesProcesadas(Array.isArray(resProc.data) ? resProc.data : []);
+                //setImagenesProcesadas(Array.isArray(resProc.data) ? resProc.data : []);
             } catch (err) {
                 console.error("Error al cargar la galería:", err);
                 setError("Error al cargar la galería de la cámara");
@@ -39,7 +39,7 @@ function Galeria() {
         fetchData();
     }, [id]);
 
-    const totalElementos = imagenes.length + videos.filter(v => v.video).length + imagenesProcesadas.length;
+    const totalElementos = imagenes.length + videos.filter(v => v.video).length ;
 
     if (loading) {
         return (
@@ -203,34 +203,6 @@ function Galeria() {
                     )}
                 </div>
 
-                {/* Sección de Imágenes Procesadas */}
-                <div className="media-section">
-                    <div className="section-header">
-                        <h3 className="section-title">🔍 Imágenes Procesadas</h3>
-                        <span className="section-count">{imagenesProcesadas.length} elementos</span>
-                    </div>
-                    {imagenesProcesadas.length > 0 ? (
-                        <div className="media-grid">
-                            {imagenesProcesadas.map((img, index) => (
-                                <div key={img.id} className="media-item processed-item">
-                                    <img
-                                        src={`data:image/png;base64,${img.imagen}`}
-                                        alt={`Procesada ${index + 1}`}
-                                        loading="lazy"
-                                    />
-                                    <div className="media-overlay">
-                                        <span className="media-info">Procesada #{img.id}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="empty-state">
-                            <p>🔍 No hay imágenes procesadas disponibles para esta cámara.</p>
-                        </div>
-                    )}
-                </div>
-
                 {/* Resumen de la galería */}
                 <div className="summary-section">
                     <h3 className="section-title">📊 Resumen de la Galería</h3>
@@ -244,7 +216,6 @@ function Galeria() {
                             <span className="summary-label">Videos</span>
                         </div>
                         <div className="summary-item">
-                            <span className="summary-number">{imagenesProcesadas.length}</span>
                             <span className="summary-label">Imágenes Procesadas</span>
                         </div>
                         <div className="summary-item total">
