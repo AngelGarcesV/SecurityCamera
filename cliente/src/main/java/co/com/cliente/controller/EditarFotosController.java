@@ -38,66 +38,6 @@ import co.com.cliente.httpRequest.PropertiesLoader;
 
 public class EditarFotosController implements Initializable {
 
-<<<<<<< HEAD
-
-    @FXML
-    private ImageView imageView;
-
-    @FXML
-    private Label placeholderLabel;
-
-    @FXML
-    private AnchorPane imageContainer;
-
-
-    @FXML
-    private Button selectImageBtn;
-
-    @FXML
-    private Button rotateBtn;
-
-    @FXML
-    private Button grayscaleBtn;
-
-    @FXML
-    private Button saveImageBtn;
-
-    @FXML
-    private Button backButton;
-
-    @FXML
-    private Button resetBtn;
-
-    @FXML
-    private Label imageInfoLabel;
-
-
-    @FXML
-    private Button increaseBrightnessBtn;
-
-    @FXML
-    private Button decreaseBrightnessBtn;
-
-    @FXML
-    private Label brightnessLevelLabel;
-
-    @FXML
-    private ProgressBar brightnessProgressBar;
-
-    @FXML
-    private Slider brightnessSlider;
-
-    @FXML
-    private Button darkBtn;
-
-    @FXML
-    private Button normalBtn;
-
-    @FXML
-    private Button brightBtn;
-
-
-=======
     @FXML private ImageView imageView;
     @FXML private Label placeholderLabel;
     @FXML private AnchorPane imageContainer;
@@ -117,66 +57,30 @@ public class EditarFotosController implements Initializable {
     @FXML private Button normalBtn;
     @FXML private Button brightBtn;
 
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     private ImagenDTO imagenOriginal;
     private BufferedImage currentBufferedImage;
     private BufferedImage originalBufferedImage;
     private boolean hasUnsavedChanges = false;
     private ExecutorService executorService;
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     private PoolFiltroBrillo poolBrillo;
     private PoolFiltroRotar poolRotar;
     private PoolFiltroEscalaGrises poolEscalaGrises;
 
-<<<<<<< HEAD
-
-    private float currentBrightnessLevel = 100;
-    private static final float BRIGHTNESS_STEP = 20;
-    private static final float MIN_BRIGHTNESS = 10;
-    private static final float MAX_BRIGHTNESS = 300;
-
-
-=======
     private float currentBrightnessLevel = 100; // Porcentaje
     private static final float BRIGHTNESS_STEP = 20; // Incremento/decremento por clic
     private static final float MIN_BRIGHTNESS = 10;  // Mínimo 10%
     private static final float MAX_BRIGHTNESS = 300; // Máximo 300%
 
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     private ChangeListener<Number> brightnessSliderListener;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-<<<<<<< HEAD
-        executorService = Executors.newFixedThreadPool(3);
-
-
-        poolBrillo = PoolFiltroBrillo.getInstance();
-        poolRotar = PoolFiltroRotar.getInstance();
-        poolEscalaGrises = PoolFiltroEscalaGrises.getInstance();
-
-
-        updateUIState(false);
-        resetBrightnessLevel();
-
-
-        initializeBrightnessSlider();
-
-
-        configureButtonHoverEffects();
-
-
-=======
         initializeExecutorService();
         initializeFilterPools();
         initializeUIState();
         initializeBrightnessControls();
         configureButtonStyles();
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         configureTooltips();
     }
 
@@ -267,9 +171,6 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-=======
     private void loadImageFromDTO(ImagenDTO imagen) {
         Task<Void> loadTask = createImageLoadTask(imagen);
         executorService.submit(loadTask);
@@ -321,7 +222,6 @@ public class EditarFotosController implements Initializable {
     private void handleImageLoadError(Exception e) {
         showAlert(Alert.AlertType.ERROR, "Error", "No se pudo cargar la imagen: " + e.getMessage());
     }
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
 
     @FXML
     private void handleSelectImage(ActionEvent event) {
@@ -404,11 +304,7 @@ public class EditarFotosController implements Initializable {
     private void handleBrightnessSlider() {
         if (canModifyImage() && !brightnessSlider.isValueChanging()) {
             float newBrightness = (float) brightnessSlider.getValue();
-<<<<<<< HEAD
-            if (Math.abs(newBrightness - currentBrightnessLevel) > 5) {
-=======
             if (shouldUpdateBrightness(newBrightness)) {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
                 applyBrightnessFilter(newBrightness, "Slider");
             }
         }
@@ -494,44 +390,11 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-
-    private void loadImageFromDTO(ImagenDTO imagen) {
-        Task<Void> loadTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                try {
-                    byte[] imageData = imagen.getImagen();
-                    ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
-                    originalBufferedImage = ImageIO.read(bis);
-                    currentBufferedImage = deepCopy(originalBufferedImage);
-
-                    Platform.runLater(() -> {
-                        displayImage(currentBufferedImage);
-                        updateImageInfo(imagen.getNombre(), originalBufferedImage);
-                        updateUIState(true);
-                        placeholderLabel.setVisible(false);
-                        resetBrightnessLevel();
-                        hasUnsavedChanges = false;
-                        updateSaveButtonState();
-                        updateResetButtonState();
-                    });
-
-                } catch (Exception e) {
-                    Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.ERROR, "Error",
-                                "No se pudo cargar la imagen: " + e.getMessage());
-                    });
-                }
-                return null;
-=======
     private void handleUnsavedChangesOnExit() {
         Alert alert = createUnsavedChangesAlert();
         alert.showAndWait().ifPresent(response -> {
             if (response.getButtonData().isDefaultButton()) {
                 saveEditedImage();
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
             }
             navigateBackToPhotos();
         });
@@ -545,11 +408,6 @@ public class EditarFotosController implements Initializable {
         return alert;
     }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     private void applyBrightnessFilter(float targetBrightness, String action) {
         Task<Void> filterTask = createBrightnessFilterTask(targetBrightness, action);
         executorService.submit(filterTask);
@@ -563,73 +421,13 @@ public class EditarFotosController implements Initializable {
 
                 FiltroBrillo filtro = poolBrillo.obtener();
                 try {
-<<<<<<< HEAD
-
-                    Platform.runLater(() -> {
-                        if (brightnessLevelLabel != null) {
-                            brightnessLevelLabel.setText("Procesando...");
-                        }
-                        if (brightnessProgressBar != null) {
-                            brightnessProgressBar.setProgress(-1);
-                        }
-                    });
-
-
-                    filtro.setBrilloRelativo((int) targetBrightness);
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
                     long startTime = System.currentTimeMillis();
                     BufferedImage result = applyBrightnessToImage(filtro, targetBrightness);
                     long processingTime = System.currentTimeMillis() - startTime;
 
-<<<<<<< HEAD
-
-                    BufferedImage sourceImage = originalBufferedImage != null ? originalBufferedImage : currentBufferedImage;
-                    BufferedImage result = filtro.aplicar(sourceImage);
-
-                    long endTime = System.currentTimeMillis();
-
-                    Platform.runLater(() -> {
-                        if (result != null) {
-                            currentBufferedImage = result;
-                            currentBrightnessLevel = targetBrightness;
-                            displayImage(currentBufferedImage);
-                            hasUnsavedChanges = true;
-                            updateSaveButtonState();
-                            updateResetButtonState();
-
-                            String message = String.format("%s brillo: %.0f%% (Tiempo: %dms)",
-                                    action, targetBrightness, (endTime - startTime));
-                            updateImageInfo(message, currentBufferedImage);
-
-
-                            updateBrightnessButtonsState();
-
-
-                            System.out.println(String.format("Brillo aplicado: %.0f%%, Factor: %.2f",
-                                    targetBrightness, filtro.getFactorBrillo()));
-                        } else {
-                            showAlert(Alert.AlertType.ERROR, "Error",
-                                    "No se pudo aplicar el filtro de brillo");
-
-
-                            updateBrightnessIndicators();
-                        }
-                    });
-
-                } catch (Exception e) {
-                    Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.ERROR, "Error",
-                                "Error al procesar brillo: " + e.getMessage());
-                        updateBrightnessIndicators();
-                    });
-                    e.printStackTrace();
-=======
                     Platform.runLater(() -> handleBrightnessFilterSuccess(result, targetBrightness, action, processingTime));
                 } catch (Exception e) {
                     Platform.runLater(() -> handleBrightnessFilterError(e));
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
                 } finally {
                     poolBrillo.liberar(filtro);
                 }
@@ -713,22 +511,7 @@ public class EditarFotosController implements Initializable {
                     BufferedImage result = applyRotationToImage(filtro);
                     long endTime = System.currentTimeMillis();
 
-<<<<<<< HEAD
-                    Platform.runLater(() -> {
-                        if (result != null) {
-                            currentBufferedImage = result;
-                            originalBufferedImage = deepCopy(result);
-                            displayImage(currentBufferedImage);
-                            hasUnsavedChanges = true;
-                            updateSaveButtonState();
-                            updateResetButtonState();
-                            updateImageInfo("Imagen rotada 90° (Tiempo: " + (endTime - startTime) + "ms)", currentBufferedImage);
-                        }
-                    });
-
-=======
                     Platform.runLater(() -> handleRotateFilterSuccess(result, endTime - startTime));
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
                 } finally {
                     poolRotar.liberar(filtro);
                 }
@@ -780,9 +563,6 @@ public class EditarFotosController implements Initializable {
         };
     }
 
-<<<<<<< HEAD
-
-=======
     private void handleGrayscaleFilterSuccess(BufferedImage result, long processingTime) {
         if (result != null) {
             updateImageAfterGrayscale(result);
@@ -801,7 +581,6 @@ public class EditarFotosController implements Initializable {
         updateSaveButtonState();
         updateResetButtonState();
     }
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
 
     private void saveEditedImage() {
         if (currentBufferedImage == null) return;
@@ -815,58 +594,9 @@ public class EditarFotosController implements Initializable {
             @Override
             protected Void call() throws Exception {
                 try {
-<<<<<<< HEAD
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    ImageIO.write(currentBufferedImage, "PNG", baos);
-                    byte[] imageBytes = baos.toByteArray();
-                    String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-
-
-                    JSONObject jsonRequest = new JSONObject();
-                    String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-                    String editedImageName = "Editada_" + timestamp;
-
-                    if (imagenOriginal != null) {
-
-                        jsonRequest.put("nombre", imagenOriginal.getNombre() + "_editada_" + timestamp);
-                        jsonRequest.put("camaraId", imagenOriginal.getCamaraId());
-                        jsonRequest.put("usuarioId", imagenOriginal.getUsuarioId());
-                    } else {
-
-                        jsonRequest.put("nombre", editedImageName);
-                        String userId = HttpService.getInstance().getUserIdFromClaims();
-                        if (userId != null) {
-                            jsonRequest.put("usuarioId", Integer.valueOf(userId));
-                        }
-                        jsonRequest.put("camaraId", 1);
-                    }
-
-                    jsonRequest.put("imagen", base64Image);
-                    jsonRequest.put("resolucion", currentBufferedImage.getWidth() + "x" + currentBufferedImage.getHeight());
-                    SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                    jsonRequest.put("fecha", isoFormat.format(new Date()));
-
-
-
-                    HttpService.getInstance().sendPostRequest(
-                            PropertiesLoader.getBaseUrl() +
-                            "/api/imagenes/save",
-                            jsonRequest.toString()
-                    );
-
-                    Platform.runLater(() -> {
-                        hasUnsavedChanges = false;
-                        updateSaveButtonState();
-                        updateResetButtonState();
-                        showAlert(Alert.AlertType.INFORMATION, "Éxito",
-                                "Imagen guardada correctamente en el servidor");
-                        updateImageInfo("Imagen guardada exitosamente", currentBufferedImage);
-                    });
-=======
                     String base64Image = convertImageToBase64();
                     JSONObject jsonRequest = buildSaveRequest(base64Image);
                     sendSaveRequest(jsonRequest);
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
 
                     Platform.runLater(() -> handleSaveSuccess());
                 } catch (Exception e) {
@@ -877,9 +607,6 @@ public class EditarFotosController implements Initializable {
         };
     }
 
-<<<<<<< HEAD
-
-=======
     private String convertImageToBase64() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(currentBufferedImage, "PNG", baos);
@@ -948,29 +675,12 @@ public class EditarFotosController implements Initializable {
     private void handleSaveError(Exception e) {
         showAlert(Alert.AlertType.ERROR, "Error", "No se pudo guardar la imagen: " + e.getMessage());
     }
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
 
     private void displayImage(BufferedImage bufferedImage) {
         if (bufferedImage != null) {
             try {
-<<<<<<< HEAD
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(bufferedImage, "PNG", baos);
-                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                Image fxImage = new Image(bais);
-
-                imageView.setImage(fxImage);
-                imageView.setVisible(true);
-
-
-                imageView.setFitWidth(580);
-                imageView.setFitHeight(400);
-                imageView.setPreserveRatio(true);
-
-=======
                 Image fxImage = convertBufferedImageToFXImage(bufferedImage);
                 updateImageView(fxImage);
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
             } catch (IOException e) {
                 showAlert(Alert.AlertType.ERROR, "Error", "No se pudo mostrar la imagen: " + e.getMessage());
             }
@@ -1025,46 +735,13 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-
-    private void initializeBrightnessSlider() {
-        if (brightnessSlider != null) {
-
-            brightnessSliderListener = (obs, oldVal, newVal) -> {
-                if (!brightnessSlider.isValueChanging()) {
-                    float newBrightness = newVal.floatValue();
-                    if (Math.abs(newBrightness - currentBrightnessLevel) > 5) {
-                        applyBrightnessFilter(newBrightness, "Slider");
-                    }
-                }
-            };
-
-            brightnessSlider.valueProperty().addListener(brightnessSliderListener);
-
-
-            brightnessSlider.setOnMouseDragged(e -> {
-                if (currentBufferedImage != null) {
-                    float newBrightness = (float) brightnessSlider.getValue();
-                    currentBrightnessLevel = newBrightness;
-                    updateBrightnessIndicators();
-                }
-            });
-        }
-    }
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     private void resetBrightnessLevel() {
-        currentBrightnessLevel = 100;
+        currentBrightnessLevel = 100; // Brillo normal
         updateBrightnessButtonsState();
         updateBrightnessIndicators();
     }
 
     private void updateBrightnessButtonsState() {
-<<<<<<< HEAD
-
-=======
         updateBrightnessButtonAvailability();
         updateBrightnessButtonLabels();
         updatePresetButtonsStyle();
@@ -1072,7 +749,6 @@ public class EditarFotosController implements Initializable {
     }
 
     private void updateBrightnessButtonAvailability() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         boolean canIncrease = currentBrightnessLevel < MAX_BRIGHTNESS;
         boolean canDecrease = currentBrightnessLevel > MIN_BRIGHTNESS;
 
@@ -1084,20 +760,8 @@ public class EditarFotosController implements Initializable {
         boolean canIncrease = currentBrightnessLevel < MAX_BRIGHTNESS;
         boolean canDecrease = currentBrightnessLevel > MIN_BRIGHTNESS;
 
-<<<<<<< HEAD
-
         increaseBrightnessBtn.setText(canIncrease ? "Aumentar (+)" : "Máximo");
         decreaseBrightnessBtn.setText(canDecrease ? "Disminuir (-)" : "Mínimo");
-
-
-        updatePresetButtonsStyle();
-
-
-        updateBrightnessIndicators();
-=======
-        increaseBrightnessBtn.setText(canIncrease ? "Aumentar (+)" : "Máximo");
-        decreaseBrightnessBtn.setText(canDecrease ? "Disminuir (-)" : "Mínimo");
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     }
 
     private void updateBrightnessIndicators() {
@@ -1114,24 +778,9 @@ public class EditarFotosController implements Initializable {
 
     private void updateBrightnessProgressBar() {
         if (brightnessProgressBar != null) {
-<<<<<<< HEAD
-
-            double progress = (currentBrightnessLevel - MIN_BRIGHTNESS) / (MAX_BRIGHTNESS - MIN_BRIGHTNESS);
-            brightnessProgressBar.setProgress(Math.max(0, Math.min(1, progress)));
-
-
-            if (currentBrightnessLevel < 70) {
-                brightnessProgressBar.setStyle("-fx-accent: #dc3545;");
-            } else if (currentBrightnessLevel > 150) {
-                brightnessProgressBar.setStyle("-fx-accent: #ffc107;");
-            } else {
-                brightnessProgressBar.setStyle("-fx-accent: #28a745;");
-            }
-=======
             double progress = calculateBrightnessProgress();
             brightnessProgressBar.setProgress(Math.max(0, Math.min(1, progress)));
             setBrightnessProgressBarColor();
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         }
     }
 
@@ -1151,7 +800,7 @@ public class EditarFotosController implements Initializable {
 
     private void updateBrightnessSliderValue() {
         if (brightnessSlider != null && brightnessSliderListener != null) {
-
+            // Actualizar slider sin disparar el evento
             brightnessSlider.valueProperty().removeListener(brightnessSliderListener);
             brightnessSlider.setValue(currentBrightnessLevel);
             brightnessSlider.valueProperty().addListener(brightnessSliderListener);
@@ -1159,10 +808,6 @@ public class EditarFotosController implements Initializable {
     }
 
     private void updatePresetButtonsStyle() {
-<<<<<<< HEAD
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         String normalStyle = "-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 10px;";
         String activeStyle = "-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold;";
 
@@ -1176,13 +821,8 @@ public class EditarFotosController implements Initializable {
         if (brightBtn != null) brightBtn.setStyle(normalStyle);
     }
 
-<<<<<<< HEAD
-
-        if (currentBrightnessLevel <= 60 && darkBtn != null) {
-=======
     private void highlightActivePreset(String activeStyle) {
         if (isCurrentlyDark() && darkBtn != null) {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
             darkBtn.setStyle(activeStyle);
         } else if (isCurrentlyNormal() && normalBtn != null) {
             normalBtn.setStyle(activeStyle);
@@ -1191,12 +831,6 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-
-    private void updateUIState(boolean imageLoaded) {
-
-=======
     private boolean isCurrentlyDark() {
         return currentBrightnessLevel <= 60;
     }
@@ -1223,18 +857,13 @@ public class EditarFotosController implements Initializable {
     }
 
     private void updateBasicControlsState(boolean imageLoaded) {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         increaseBrightnessBtn.setDisable(!imageLoaded);
         decreaseBrightnessBtn.setDisable(!imageLoaded);
         rotateBtn.setDisable(!imageLoaded);
         grayscaleBtn.setDisable(!imageLoaded);
     }
 
-<<<<<<< HEAD
-
-=======
     private void updateAdvancedControlsState(boolean imageLoaded) {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         if (brightnessSlider != null) {
             brightnessSlider.setDisable(!imageLoaded);
         }
@@ -1243,25 +872,12 @@ public class EditarFotosController implements Initializable {
         if (brightBtn != null) brightBtn.setDisable(!imageLoaded);
     }
 
-<<<<<<< HEAD
-        if (imageLoaded) {
-            updateBrightnessButtonsState();
-        } else {
-
-            if (brightnessLevelLabel != null) {
-                brightnessLevelLabel.setText("--");
-            }
-            if (brightnessProgressBar != null) {
-                brightnessProgressBar.setProgress(0);
-            }
-=======
     private void resetBrightnessDisplayWhenNoImage() {
         if (brightnessLevelLabel != null) {
             brightnessLevelLabel.setText("--");
         }
         if (brightnessProgressBar != null) {
             brightnessProgressBar.setProgress(0);
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         }
     }
 
@@ -1275,12 +891,6 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-
-    private void configureButtonHoverEffects() {
-
-=======
     private void configureButtonHoverEffects() {
         configureSelectImageButtonHover();
         configureBrightnessButtonsHover();
@@ -1289,56 +899,36 @@ public class EditarFotosController implements Initializable {
     }
 
     private void configureSelectImageButtonHover() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         selectImageBtn.setOnMouseEntered(e ->
                 selectImageBtn.setStyle("-fx-background-color: #3367d6; -fx-text-fill: white; -fx-font-weight: bold;"));
         selectImageBtn.setOnMouseExited(e ->
                 selectImageBtn.setStyle("-fx-background-color: #4285f4; -fx-text-fill: white; -fx-font-weight: bold;"));
     }
 
-<<<<<<< HEAD
-
-=======
     private void configureBrightnessButtonsHover() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         increaseBrightnessBtn.setOnMouseEntered(e ->
                 increaseBrightnessBtn.setStyle("-fx-background-color: #4285f4; -fx-text-fill: white; -fx-font-weight: bold;"));
         increaseBrightnessBtn.setOnMouseExited(e ->
                 increaseBrightnessBtn.setStyle("-fx-background-color: #5ba3f5; -fx-text-fill: white; -fx-font-weight: bold;"));
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         decreaseBrightnessBtn.setOnMouseEntered(e ->
                 decreaseBrightnessBtn.setStyle("-fx-background-color: #218838; -fx-text-fill: white; -fx-font-weight: bold;"));
         decreaseBrightnessBtn.setOnMouseExited(e ->
                 decreaseBrightnessBtn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;"));
     }
 
-<<<<<<< HEAD
-
-=======
     private void configureFilterButtonsHover() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         rotateBtn.setOnMouseEntered(e ->
                 rotateBtn.setStyle("-fx-background-color: #e0a800; -fx-text-fill: black; -fx-font-weight: bold;"));
         rotateBtn.setOnMouseExited(e ->
                 rotateBtn.setStyle("-fx-background-color: #ffc107; -fx-text-fill: black; -fx-font-weight: bold;"));
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         grayscaleBtn.setOnMouseEntered(e ->
                 grayscaleBtn.setStyle("-fx-background-color: #c82333; -fx-text-fill: white; -fx-font-weight: bold;"));
         grayscaleBtn.setOnMouseExited(e ->
                 grayscaleBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-weight: bold;"));
     }
 
-<<<<<<< HEAD
-
-=======
     private void configureActionButtonsHover() {
         configureSaveButtonHover();
         configureResetButtonHover();
@@ -1346,7 +936,6 @@ public class EditarFotosController implements Initializable {
     }
 
     private void configureSaveButtonHover() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         saveImageBtn.setOnMouseEntered(e -> {
             if (!saveImageBtn.isDisabled()) {
                 saveImageBtn.setStyle("-fx-background-color: #218838; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -1359,11 +948,7 @@ public class EditarFotosController implements Initializable {
         });
     }
 
-<<<<<<< HEAD
-
-=======
     private void configureResetButtonHover() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         if (resetBtn != null) {
             resetBtn.setOnMouseEntered(e -> {
                 if (!resetBtn.isDisabled()) {
@@ -1378,11 +963,7 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-=======
     private void configureBackButtonHover() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         backButton.setOnMouseEntered(e ->
                 backButton.setStyle("-fx-background-color: #5a6268; -fx-text-fill: white; -fx-font-weight: bold;"));
         backButton.setOnMouseExited(e ->
@@ -1399,9 +980,6 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-=======
     private Parent loadFotosView() throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/fotos-view.fxml"));
         return loader.load();
@@ -1431,7 +1009,6 @@ public class EditarFotosController implements Initializable {
         e.printStackTrace();
         showAlert(Alert.AlertType.ERROR, "Error", "No se pudo volver a la galería: " + e.getMessage());
     }
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
 
     private BufferedImage deepCopy(BufferedImage source) {
         if (source == null) return null;
@@ -1440,30 +1017,7 @@ public class EditarFotosController implements Initializable {
         return copy;
     }
 
-<<<<<<< HEAD
-    private void goBackToPhotosView() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/fotos-view.fxml"));
-            Parent fotosView = loader.load();
-
-            StackPane contentArea = getContentArea();
-            if (contentArea != null) {
-                contentArea.getChildren().clear();
-                contentArea.getChildren().add(fotosView);
-                updateTitle("FOTOS");
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo volver a la galería: " + e.getMessage());
-        }
-    }
-
-
-    private StackPane getContentArea() {
-=======
     private StackPane findContentArea() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         try {
             Parent root = backButton.getScene().getRoot();
             return findStackPane(root);
@@ -1527,11 +1081,6 @@ public class EditarFotosController implements Initializable {
         });
     }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     public void onClose() {
         shutdownExecutorService();
         cleanupBrightnessSliderListener();
@@ -1551,34 +1100,18 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-<<<<<<< HEAD
-
-=======
     private void cleanupBrightnessSliderListener() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         if (brightnessSlider != null && brightnessSliderListener != null) {
             brightnessSlider.valueProperty().removeListener(brightnessSliderListener);
         }
     }
 
-<<<<<<< HEAD
-
-=======
     private void clearImageMemory() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         currentBufferedImage = null;
         originalBufferedImage = null;
         imagenOriginal = null;
     }
 
-<<<<<<< HEAD
-
-
-    /**
-     * Método público para verificar si hay cambios sin guardar
-     */
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     public boolean hasUnsavedChanges() {
         return hasUnsavedChanges;
     }

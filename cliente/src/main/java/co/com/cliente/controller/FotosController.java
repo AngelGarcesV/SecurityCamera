@@ -43,24 +43,6 @@ public class FotosController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-<<<<<<< HEAD
-        executorService = Executors.newFixedThreadPool(4);
-
-
-        configurarJWT();
-
-        photoGrid.setHgap(20);
-        photoGrid.setVgap(20);
-        photoGrid.setPadding(new Insets(20, 20, 20, 20));
-
-        loadImages();
-    }
-
-    private void configurarJWT() {
-
-        if (HttpService.getInstance().getJwtToken() == null ||
-                HttpService.getInstance().getJwtToken().isEmpty()) {
-=======
         initializeExecutor();
         configureJWT();
         configurePhotoGrid();
@@ -74,7 +56,6 @@ public class FotosController implements Initializable {
     private void configureJWT() {
         if (isJWTTokenMissing()) {
             // Configurar JWT si es necesario
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         }
     }
 
@@ -114,26 +95,7 @@ public class FotosController implements Initializable {
             updateCurrentImages(images);
             displayImages();
         } catch (Exception e) {
-<<<<<<< HEAD
-            e.printStackTrace();
-            Platform.runLater(() -> {
-                photoGrid.getChildren().clear();
-                Label errorLabel;
-
-
-                if (e.getMessage() != null && e.getMessage().contains("404")) {
-                    errorLabel = new Label("No se han tomado imágenes");
-                } else {
-                    errorLabel = new Label("Error al cargar las imágenes: " + e.getMessage());
-                }
-
-                errorLabel.setFont(Font.font("System", FontWeight.NORMAL, 14));
-                errorLabel.setStyle("-fx-text-fill: #888888;");
-                photoGrid.getChildren().add(errorLabel);
-            });
-=======
             handleImageLoadError(e);
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         }
     }
 
@@ -161,16 +123,6 @@ public class FotosController implements Initializable {
         });
     }
 
-<<<<<<< HEAD
-    private void addPhotoToGrid(ImagenDTO imagen) {
-
-        VBox photoContainer = new VBox();
-        photoContainer.setAlignment(Pos.CENTER);
-        photoContainer.setSpacing(5);
-        photoContainer.setPrefWidth(THUMBNAIL_SIZE);
-
-
-=======
     private boolean isNotFoundError(Exception e) {
         return e.getMessage() != null && e.getMessage().contains("404");
     }
@@ -252,18 +204,13 @@ public class FotosController implements Initializable {
     }
 
     private StackPane createPhotoPlaceholder() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         StackPane photoItem = new StackPane();
         photoItem.setPrefSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE);
         photoItem.setStyle("-fx-background-color: #e0e0e0;");
         return photoItem;
     }
 
-<<<<<<< HEAD
-
-=======
     private Label createNameLabel(ImagenDTO imagen) {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         Label nameLabel = new Label(imagen.getNombre());
         nameLabel.setMaxWidth(THUMBNAIL_SIZE);
         nameLabel.setWrapText(true);
@@ -272,9 +219,6 @@ public class FotosController implements Initializable {
         return nameLabel;
     }
 
-<<<<<<< HEAD
-
-=======
     private HBox createActionButtons(ImagenDTO imagen) {
         HBox buttonBox = createButtonContainer();
 
@@ -287,18 +231,13 @@ public class FotosController implements Initializable {
     }
 
     private HBox createButtonContainer() {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         HBox buttonBox = new HBox();
         buttonBox.setSpacing(3);
         buttonBox.setAlignment(Pos.CENTER);
         return buttonBox;
     }
 
-<<<<<<< HEAD
-
-=======
     private Button createEditButton(ImagenDTO imagen) {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         Button editButton = new Button("Editar");
         editButton.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-size: 10px;");
         editButton.setPrefWidth(60);
@@ -306,11 +245,7 @@ public class FotosController implements Initializable {
         return editButton;
     }
 
-<<<<<<< HEAD
-
-=======
     private Button createUpdateButton(ImagenDTO imagen) {
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         Button updateButton = new Button("Actualizar");
         updateButton.setStyle("-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-size: 10px;");
         updateButton.setPrefWidth(60);
@@ -318,22 +253,6 @@ public class FotosController implements Initializable {
         return updateButton;
     }
 
-<<<<<<< HEAD
-
-        Button deleteButton = new Button("Eliminar");
-        deleteButton.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 10px;");
-        deleteButton.setPrefWidth(60);
-        deleteButton.setOnAction(e -> confirmAndDelete(imagen));
-
-
-        buttonBox.getChildren().addAll(editButton, updateButton, deleteButton);
-
-
-        photoContainer.getChildren().addAll(photoItem, nameLabel, buttonBox);
-
-
-        photoGrid.getChildren().add(photoContainer);
-=======
     private Button createDeleteButton(ImagenDTO imagen) {
         Button deleteButton = new Button("Eliminar");
         deleteButton.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 10px;");
@@ -341,7 +260,6 @@ public class FotosController implements Initializable {
         deleteButton.setOnAction(e -> handleDeleteImage(imagen));
         return deleteButton;
     }
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
 
     private void loadImageAsync(VBox container, ImagenDTO imagen) {
         executorService.submit(() -> {
@@ -362,38 +280,6 @@ public class FotosController implements Initializable {
 
     private void updateContainerWithImage(VBox container, Image image, ImagenDTO imagen) {
         try {
-<<<<<<< HEAD
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
-            Parent editView = loader.load();
-
-
-            Object controller = loader.getController();
-
-
-            if (controller != null) {
-                try {
-
-                    controller.getClass().getMethod("setImagenToEdit", ImagenDTO.class).invoke(controller, imagen);
-                } catch (Exception e) {
-                    System.out.println("El controlador no tiene método setImagenToEdit: " + e.getMessage());
-                }
-            }
-
-
-            StackPane contentArea = getContentArea();
-            if (contentArea != null) {
-                contentArea.getChildren().clear();
-                contentArea.getChildren().add(editView);
-
-
-                updateTitle("EDITAR FOTOS");
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo abrir la vista de edición: " + e.getMessage());
-=======
             StackPane photoItem = getPhotoItemFromContainer(container);
             ImageView imageView = createImageView(image);
 
@@ -403,7 +289,6 @@ public class FotosController implements Initializable {
 
         } catch (Exception e) {
             handleImageLoadFailure(container);
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
         }
     }
 
@@ -669,10 +554,6 @@ public class FotosController implements Initializable {
 
     private StackPane findContentArea() {
         try {
-<<<<<<< HEAD
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
             Parent root = photoGrid.getScene().getRoot();
             return findStackPane(root);
         } catch (Exception e) {
@@ -722,135 +603,6 @@ public class FotosController implements Initializable {
         return null;
     }
 
-<<<<<<< HEAD
-    private void showUpdateDialog(ImagenDTO imagen) {
-
-        Dialog<Pair<String, String>> dialog = new Dialog<>();
-        dialog.setTitle("Actualizar Imagen");
-        dialog.setHeaderText("Modificar nombre y resolución");
-
-
-        ButtonType updateButtonType = new ButtonType("Actualizar", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
-
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField nombreField = new TextField(imagen.getNombre());
-        TextField resolucionField = new TextField(imagen.getResolucion());
-
-        grid.add(new Label("Nombre:"), 0, 0);
-        grid.add(nombreField, 1, 0);
-        grid.add(new Label("Resolución:"), 0, 1);
-        grid.add(resolucionField, 1, 1);
-
-        dialog.getDialogPane().setContent(grid);
-
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == updateButtonType) {
-                return new Pair<>(nombreField.getText(), resolucionField.getText());
-            }
-            return null;
-        });
-
-
-        Optional<Pair<String, String>> result = dialog.showAndWait();
-        result.ifPresent(nombreResolucion -> {
-            updateImage(imagen, nombreResolucion.getKey(), nombreResolucion.getValue());
-        });
-    }
-
-    private void updateImage(ImagenDTO imagen, String nuevoNombre, String nuevaResolucion) {
-        try {
-            JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put("id", imagen.getId());
-            jsonRequest.put("imagen", imagen.getImagen());
-            jsonRequest.put("nombre", nuevoNombre);
-            jsonRequest.put("resolucion", nuevaResolucion);
-            jsonRequest.put("fecha", imagen.getFecha().getTime());
-            jsonRequest.put("camaraId", imagen.getCamaraId());
-            jsonRequest.put("usuarioId", imagen.getUsuarioId());
-
-
-
-
-            HttpService.getInstance().sendPutRequest(
-                    API_BASE_URL + "/update",
-                    jsonRequest.toString()
-            );
-
-
-            loadImages();
-
-
-            showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen actualizada correctamente");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo actualizar la imagen: " + e.getMessage());
-        }
-    }
-
-    private void confirmAndDelete(ImagenDTO imagen) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar eliminación");
-        alert.setHeaderText("¿Está seguro de eliminar esta imagen?");
-        alert.setContentText("Esta acción no se puede deshacer.");
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            deleteImage(imagen);
-        }
-    }
-
-    private void deleteImage(ImagenDTO imagen) {
-        try {
-
-            HttpService.getInstance().sendDeleteRequest(API_BASE_URL + "/" + imagen.getId());
-
-            List<ImagenDTO> updatedImages = new ArrayList<>();
-            for (ImagenDTO img : currentImages) {
-                if (!img.getId().equals(imagen.getId())) {
-                    updatedImages.add(img);
-                }
-            }
-
-
-            currentImages = updatedImages;
-            displayImages();
-
-
-            showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen eliminada correctamente");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "No se pudo eliminar la imagen: " + e.getMessage());
-        }
-    }
-
-    private void viewFullImage(ImagenDTO imagen) {
-        try {
-            File tempFile = File.createTempFile("image_", ".png");
-            tempFile.deleteOnExit();
-
-            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                fos.write(imagen.getImagen());
-            }
-
-            java.awt.Desktop.getDesktop().open(tempFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error",
-                    "No se pudo abrir la imagen: " + e.getMessage());
-        }
-    }
-
-=======
->>>>>>> 4a75fa5c835fed9bb0e511a9929deb9ee421307f
     private void showAlert(Alert.AlertType type, String title, String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(type);
