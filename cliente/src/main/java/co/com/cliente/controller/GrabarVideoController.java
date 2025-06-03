@@ -4,6 +4,7 @@ import co.com.cliente.Main;
 import co.com.cliente.dto.CamaraDTO;
 import co.com.cliente.dto.VideoDTO;
 import co.com.cliente.httpRequest.HttpService;
+import co.com.cliente.httpRequest.PropertiesLoader;
 import co.com.cliente.websocket.VideoWebSocketClient;
 import co.com.cliente.websocket.WebSocketVideoService;
 import co.com.cliente.websocket.WebSocketVideoService.VideoUploadProgressCallback;
@@ -87,8 +88,8 @@ public class GrabarVideoController implements Initializable {
     @FXML
     private VBox activityList;
 
-    // URL de la cámara IP - imagen individual
-    private static final String IP_CAMERA_URL = "http://10.86.26.35:8080/shot.jpg";
+    // URL dinámica de la cámara IP - se configurará desde la cámara seleccionada
+    private String currentCameraUrl;
 
     private boolean isRecording = false;
     private VideoWriter videoWriter;
@@ -115,10 +116,10 @@ public class GrabarVideoController implements Initializable {
     private long segmentStartTime = 0;
     private long recordingStartTime = 0;
 
-    // Añadimos la referencia a la cámara seleccionada
+    // Referencia a la cámara seleccionada
     private CamaraDTO selectedCamara;
-    private static final String API_SAVE_IMAGE_URL = "http://localhost:9000/api/imagenes/save";
-    private static final String API_SAVE_VIDEO_URL = "http://localhost:9000/api/video/save";
+    private static final String API_SAVE_IMAGE_URL = PropertiesLoader.getBaseUrl() + "/api/imagenes/save";
+    private static final String API_SAVE_VIDEO_URL = PropertiesLoader.getBaseUrl() + "/api/video/save";
 
     // Variables para el control de tiempo de grabación
     private String currentRecordingDuration = "00:00:00";
@@ -201,11 +202,14 @@ public class GrabarVideoController implements Initializable {
 
     public void setCamara(CamaraDTO camara) {
         this.selectedCamara = camara;
+        // Configurar la URL dinámica basada en la cámara seleccionada
+        this.currentCameraUrl = camara.getCameraUrl();
+
         Main.setActiveVideoController(this);
 
         Platform.runLater(() -> {
             if (statusValue != null) {
-                statusValue.setText("Conectando a cámara IP...");
+                statusValue.setText("Conectando a " + camara.getDescripcion() + "...");
                 statusValue.setStyle("-fx-text-fill: #ff9900;");
             }
             if (resolutionValue != null) {
@@ -239,10 +243,10 @@ public class GrabarVideoController implements Initializable {
                 reconnectionAttempts = 0;
 
                 Platform.runLater(() -> {
-                    statusValue.setText("Conectado a cámara IP");
+                    statusValue.setText("Conectado a " + selectedCamara.getDescripcion());
                     statusValue.setStyle("-fx-text-fill: #009900;");
                     fpsValue.setText(String.valueOf(TARGET_FPS));
-                    addRecentActivity("📹", "Conectado a cámara IP: " + IP_CAMERA_URL, "just now");
+                    addRecentActivity("📹", "Conectado a " + selectedCamara.getDescripcion() + ": " + currentCameraUrl, "just now");
                 });
 
                 // Iniciar captura continua de frames
@@ -254,14 +258,14 @@ public class GrabarVideoController implements Initializable {
                     statusValue.setText("Error de conexión");
                     statusValue.setStyle("-fx-text-fill: #ff0000;");
                     showAlert(AlertType.ERROR, "Error de Cámara IP",
-                            "No se pudo conectar a la cámara IP: " + e.getMessage() +
+                            "No se pudo conectar a la cámara " + selectedCamara.getDescripcion() + ": " + e.getMessage() +
                                     "\n\nVerifica:\n" +
                                     "1. Que la cámara esté encendida\n" +
-                                    "2. Que la dirección IP sea correcta: " + IP_CAMERA_URL + "\n" +
+                                    "2. Que la dirección IP sea correcta: " + currentCameraUrl + "\n" +
                                     "3. Que no haya firewall bloqueando la conexión\n" +
                                     "4. Que estés en la misma red que la cámara");
 
-                    addRecentActivity("❌", "Error al conectar cámara IP", "just now");
+                    addRecentActivity("❌", "Error al conectar " + selectedCamara.getDescripcion(), "just now");
                 });
 
                 scheduleReconnection();
@@ -270,7 +274,7 @@ public class GrabarVideoController implements Initializable {
     }
 
     private void testConnection() throws Exception {
-        URL url = new URL(IP_CAMERA_URL);
+        URL url = new URL(currentCameraUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(5000);
         connection.setReadTimeout(5000);
@@ -282,7 +286,7 @@ public class GrabarVideoController implements Initializable {
         }
 
         connection.disconnect();
-        System.out.println("Conexión a cámara IP verificada exitosamente");
+        System.out.println("Conexión a cámara " + selectedCamara.getDescripcion() + " verificada exitosamente");
     }
 
     private void startFrameCapture() {
@@ -301,7 +305,7 @@ public class GrabarVideoController implements Initializable {
 
     private void captureFrame() {
         try {
-            URL url = new URL(IP_CAMERA_URL);
+            URL url = new URL(currentCameraUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setConnectTimeout(3000);
             connection.setReadTimeout(3000);
@@ -353,7 +357,7 @@ public class GrabarVideoController implements Initializable {
         } catch (Exception e) {
             // Reducir logs de error para evitar spam - solo cada 10 errores
             if (System.currentTimeMillis() % 10000 < 1000) {
-                System.err.println("Error al capturar frame: " + e.getMessage());
+                System.err.println("Error al capturar frame de " + selectedCamara.getDescripcion() + ": " + e.getMessage());
             }
 
             // Si hay muchos errores consecutivos, intentar reconectar
@@ -362,7 +366,7 @@ public class GrabarVideoController implements Initializable {
                     if (reconnectionAttempts == 0) { // Solo mostrar una vez
                         statusValue.setText("Conexión inestable");
                         statusValue.setStyle("-fx-text-fill: #ff9900;");
-                        addRecentActivity("⚠️", "Conexión inestable con cámara IP", "just now");
+                        addRecentActivity("⚠️", "Conexión inestable con " + selectedCamara.getDescripcion(), "just now");
                     }
                 });
 
@@ -371,7 +375,7 @@ public class GrabarVideoController implements Initializable {
                     Platform.runLater(() -> {
                         stopRecording();
                         showAlert(AlertType.WARNING, "Grabación Interrumpida",
-                                "La grabación se detuvo debido a problemas de conectividad con la cámara IP.");
+                                "La grabación se detuvo debido a problemas de conectividad con " + selectedCamara.getDescripcion() + ".");
                     });
                 }
             }
@@ -385,7 +389,7 @@ public class GrabarVideoController implements Initializable {
             Platform.runLater(() -> {
                 statusValue.setText("Reintentando conexión... (" + reconnectionAttempts + "/" + MAX_RECONNECTION_ATTEMPTS + ")");
                 statusValue.setStyle("-fx-text-fill: #ff9900;");
-                addRecentActivity("🔄", "Reintentando conexión automática...", "just now");
+                addRecentActivity("🔄", "Reintentando conexión automática a " + selectedCamara.getDescripcion() + "...", "just now");
             });
 
             reconnectionTimer = new Timer(true);
@@ -400,7 +404,7 @@ public class GrabarVideoController implements Initializable {
             Platform.runLater(() -> {
                 statusValue.setText("Sin conexión");
                 statusValue.setStyle("-fx-text-fill: #ff0000;");
-                addRecentActivity("❌", "Máximo de reintentos alcanzado", "just now");
+                addRecentActivity("❌", "Máximo de reintentos alcanzado para " + selectedCamara.getDescripcion(), "just now");
             });
         }
     }
@@ -450,7 +454,7 @@ public class GrabarVideoController implements Initializable {
             statusValue.setText("Desconectado");
             statusValue.setStyle("-fx-text-fill: #ff0000;");
 
-            addRecentActivity("🛑", "Cámara IP desconectada manualmente", "just now");
+            addRecentActivity("🛑", selectedCamara.getDescripcion() + " desconectada manualmente", "just now");
             stopFeedAction.getChildren().get(0).setStyle("-fx-text-fill: #ff4d4d;");
         } else {
             reconnectionAttempts = 0;
@@ -479,7 +483,7 @@ public class GrabarVideoController implements Initializable {
             Mat frameToSave;
             synchronized (frameLock) {
                 if (!cameraActive || currentFrame == null || currentFrame.empty()) {
-                    throw new Exception("No hay imagen disponible para capturar o la cámara IP no está conectada.");
+                    throw new Exception("No hay imagen disponible para capturar o la cámara no está conectada.");
                 }
 
                 if (selectedCamara == null) {
@@ -496,7 +500,7 @@ public class GrabarVideoController implements Initializable {
             }
 
             String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-            String snapshotFileName = snapshotsDir.getAbsolutePath() + "/snapshot_IP_" + timestamp + ".jpg";
+            String snapshotFileName = snapshotsDir.getAbsolutePath() + "/snapshot_" + selectedCamara.getDescripcion().replaceAll("[^a-zA-Z0-9]", "_") + "_" + timestamp + ".jpg";
 
             boolean success = Imgcodecs.imwrite(snapshotFileName, frameToSave);
 
@@ -515,7 +519,7 @@ public class GrabarVideoController implements Initializable {
 
             // Crear el objeto JSON para enviar al servidor
             JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put("nombre", "Snapshot_IP_" + timestamp);
+            jsonRequest.put("nombre", "Snapshot_" + selectedCamara.getDescripcion() + "_" + timestamp);
             jsonRequest.put("imagen", base64Image);
             jsonRequest.put("resolucion", selectedCamara.getResolucion());
 
@@ -535,7 +539,7 @@ public class GrabarVideoController implements Initializable {
                     HttpService.getInstance().sendPostRequest(API_SAVE_IMAGE_URL, jsonRequest.toString());
 
                     Platform.runLater(() -> {
-                        addRecentActivity("📷", "Snapshot de cámara IP guardado en servidor", "just now");
+                        addRecentActivity("📷", "Snapshot de " + selectedCamara.getDescripcion() + " guardado en servidor", "just now");
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -546,15 +550,15 @@ public class GrabarVideoController implements Initializable {
                 }
             }).start();
 
-            addRecentActivity("📷", "Snapshot tomado de cámara IP", "just now");
+            addRecentActivity("📷", "Snapshot tomado de " + selectedCamara.getDescripcion(), "just now");
 
             showAlert(Alert.AlertType.INFORMATION, "Captura Realizada",
-                    "¡Captura de cámara IP realizada con éxito!\nGuardada localmente en: " + snapshotFileName + "\nY enviada al servidor.");
+                    "¡Captura de " + selectedCamara.getDescripcion() + " realizada con éxito!\nGuardada localmente en: " + snapshotFileName + "\nY enviada al servidor.");
 
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error de Captura",
-                    "No se pudo tomar la captura de la cámara IP: " + e.getMessage());
+                    "No se pudo tomar la captura de " + selectedCamara.getDescripcion() + ": " + e.getMessage());
         }
     }
 
@@ -562,7 +566,7 @@ public class GrabarVideoController implements Initializable {
         try {
             synchronized (frameLock) {
                 if (!cameraActive || currentFrame == null || currentFrame.empty()) {
-                    throw new Exception("La cámara IP no está activa o no hay imagen disponible.");
+                    throw new Exception("La cámara no está activa o no hay imagen disponible.");
                 }
             }
 
@@ -591,7 +595,7 @@ public class GrabarVideoController implements Initializable {
 
             recordBtn.setText("DETENER GRABACIÓN");
             recordBtn.setStyle("-fx-background-color: #ea4335; -fx-text-fill: white;");
-            statusValue.setText("Grabando desde cámara IP...");
+            statusValue.setText("Grabando desde " + selectedCamara.getDescripcion() + "...");
 
             startRecordingTimer();
 
@@ -599,12 +603,12 @@ public class GrabarVideoController implements Initializable {
                 startSegmentTimer();
             }
 
-            addRecentActivity("🔴", "Grabación iniciada desde cámara IP", "just now");
-            System.out.println("Grabación de cámara IP iniciada - FPS: " + fps + ", Resolución: " + width + "x" + height);
+            addRecentActivity("🔴", "Grabación iniciada desde " + selectedCamara.getDescripcion(), "just now");
+            System.out.println("Grabación de " + selectedCamara.getDescripcion() + " iniciada - FPS: " + fps + ", Resolución: " + width + "x" + height);
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(AlertType.ERROR, "Error de Grabación", "No se pudo iniciar la grabación de la cámara IP: " + e.getMessage());
+            showAlert(AlertType.ERROR, "Error de Grabación", "No se pudo iniciar la grabación de " + selectedCamara.getDescripcion() + ": " + e.getMessage());
             isRecording = false;
         }
     }
@@ -617,8 +621,9 @@ public class GrabarVideoController implements Initializable {
                 }
 
                 String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+                String cameraNameSafe = selectedCamara.getDescripcion().replaceAll("[^a-zA-Z0-9]", "_");
                 currentVideoFileName = recordingsDir.getAbsolutePath() +
-                        "/IP_segment_" + currentSessionId + "_" + String.format("%03d", currentSegmentNumber) +
+                        "/" + cameraNameSafe + "_segment_" + currentSessionId + "_" + String.format("%03d", currentSegmentNumber) +
                         "_" + timestamp + ".mp4";
 
                 videoWriter = new VideoWriter(
@@ -637,7 +642,7 @@ public class GrabarVideoController implements Initializable {
 
                 if (!videoWriter.isOpened()) {
                     currentVideoFileName = recordingsDir.getAbsolutePath() +
-                            "/IP_segment_" + currentSessionId + "_" + String.format("%03d", currentSegmentNumber) +
+                            "/" + cameraNameSafe + "_segment_" + currentSessionId + "_" + String.format("%03d", currentSegmentNumber) +
                             "_" + timestamp + ".avi";
                     videoWriter = new VideoWriter(currentVideoFileName, VideoWriter.fourcc('D', 'I', 'V', 'X'),
                             fps, new Size(width, height), true);
@@ -648,7 +653,7 @@ public class GrabarVideoController implements Initializable {
                 }
             }
 
-            System.out.println("Nuevo segmento de cámara IP creado: " + currentVideoFileName);
+            System.out.println("Nuevo segmento de " + selectedCamara.getDescripcion() + " creado: " + currentVideoFileName);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -691,7 +696,7 @@ public class GrabarVideoController implements Initializable {
             File segmentFile = new File(completedSegmentFileName);
             if (segmentFile.exists() && segmentFile.length() > 0) {
                 addRecentActivity("📤",
-                        "Enviando segmento IP " + (currentSegmentNumber + 1) + " (" + realSegmentDuration + ") al servidor...",
+                        "Enviando segmento " + (currentSegmentNumber + 1) + " de " + selectedCamara.getDescripcion() + " (" + realSegmentDuration + ") al servidor...",
                         "just now");
 
                 sendSegmentToServer(completedSegmentFileName, currentSegmentNumber, realSegmentDuration);
@@ -717,11 +722,11 @@ public class GrabarVideoController implements Initializable {
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Error al procesar segmento de cámara IP: " + e.getMessage());
+            System.err.println("Error al procesar segmento de " + selectedCamara.getDescripcion() + ": " + e.getMessage());
 
             Platform.runLater(() -> {
                 addRecentActivity("❌",
-                        "Error al procesar segmento IP " + (currentSegmentNumber + 1),
+                        "Error al procesar segmento " + (currentSegmentNumber + 1) + " de " + selectedCamara.getDescripcion(),
                         "just now");
             });
         }
@@ -732,7 +737,7 @@ public class GrabarVideoController implements Initializable {
         if (useWebSocket && webSocketService.isConnected()) {
             sendSegmentViaWebSocket(segmentFileName, segmentNumber, realDuration);
         } else {
-           // sendSegmentViaHTTP(segmentFileName, segmentNumber, realDuration);
+            // sendSegmentViaHTTP(segmentFileName, segmentNumber, realDuration);
             System.out.println("no se pudo");
         }
     }
@@ -742,14 +747,14 @@ public class GrabarVideoController implements Initializable {
             try {
                 File segmentFile = new File(segmentFileName);
                 if (!segmentFile.exists()) {
-                    System.err.println("El archivo de segmento de cámara IP no existe: " + segmentFileName);
+                    System.err.println("El archivo de segmento de " + selectedCamara.getDescripcion() + " no existe: " + segmentFileName);
                     return;
                 }
 
                 // Comprimir video antes de enviar
                 File compressedSegment = compressVideoWithOpenCV(segmentFile);
 
-                String segmentName = "IP_Segmento_" + (segmentNumber + 1) + "_" +
+                String segmentName = selectedCamara.getDescripcion().replaceAll("[^a-zA-Z0-9]", "_") + "_Segmento_" + (segmentNumber + 1) + "_" +
                         new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
 
                 // Mostrar dialog de progreso
@@ -774,7 +779,7 @@ public class GrabarVideoController implements Initializable {
                     public void onUploadStarted() {
                         Platform.runLater(() -> {
                             addRecentActivity("📤",
-                                    "Iniciando envío WebSocket segmento IP " + (segmentNumber + 1) + " (" + realDuration + ")",
+                                    "Iniciando envío WebSocket segmento " + (segmentNumber + 1) + " de " + selectedCamara.getDescripcion() + " (" + realDuration + ")",
                                     "just now");
                         });
                     }
@@ -793,7 +798,7 @@ public class GrabarVideoController implements Initializable {
                                 currentUploadDialog.showSuccess("Video ID: " + videoId);
                             }
                             addRecentActivity("✅",
-                                    "Segmento IP " + (segmentNumber + 1) + " (" + realDuration + ") enviado exitosamente via WebSocket",
+                                    "Segmento " + (segmentNumber + 1) + " de " + selectedCamara.getDescripcion() + " (" + realDuration + ") enviado exitosamente via WebSocket",
                                     "just now");
                         });
 
@@ -810,7 +815,7 @@ public class GrabarVideoController implements Initializable {
                                 currentUploadDialog.showError(error);
                             }
                             addRecentActivity("❌",
-                                    "Error WebSocket segmento IP " + (segmentNumber + 1) + ": " + error,
+                                    "Error WebSocket segmento " + (segmentNumber + 1) + " de " + selectedCamara.getDescripcion() + ": " + error,
                                     "just now");
 
                             // Fallback a HTTP en caso de error
@@ -839,7 +844,7 @@ public class GrabarVideoController implements Initializable {
                         currentUploadDialog.showError(e.getMessage());
                     }
                     addRecentActivity("❌",
-                            "Error al procesar segmento IP " + (segmentNumber + 1) + " para WebSocket: " + e.getMessage(),
+                            "Error al procesar segmento " + (segmentNumber + 1) + " de " + selectedCamara.getDescripcion() + " para WebSocket: " + e.getMessage(),
                             "just now");
                 });
 
@@ -855,20 +860,20 @@ public class GrabarVideoController implements Initializable {
             try {
                 File segmentFile = new File(segmentFileName);
                 if (!segmentFile.exists()) {
-                    System.err.println("El archivo de segmento de cámara IP no existe: " + segmentFileName);
+                    System.err.println("El archivo de segmento de " + selectedCamara.getDescripcion() + " no existe: " + segmentFileName);
                     return;
                 }
 
                 File compressedSegment = compressVideoWithOpenCV(segmentFile);
 
-                String segmentName = "IP_Segmento_" + (segmentNumber + 1) + "_" +
+                String segmentName = selectedCamara.getDescripcion().replaceAll("[^a-zA-Z0-9]", "_") + "_Segmento_" + (segmentNumber + 1) + "_" +
                         new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
 
                 SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                 Date segmentDate = new Date();
 
                 String response = HttpService.getInstance().uploadVideoFile(
-                        "http://localhost:9000/api/video/upload",
+                        PropertiesLoader.getBaseUrl()+ "/api/video/upload",
                         compressedSegment,
                         segmentName,
                         segmentDate,
@@ -879,7 +884,7 @@ public class GrabarVideoController implements Initializable {
 
                 Platform.runLater(() -> {
                     addRecentActivity("✅",
-                            "Segmento IP " + (segmentNumber + 1) + " (" + realDuration + ") enviado exitosamente via HTTP",
+                            "Segmento " + (segmentNumber + 1) + " de " + selectedCamara.getDescripcion() + " (" + realDuration + ") enviado exitosamente via HTTP",
                             "just now");
                 });
 
@@ -888,7 +893,7 @@ public class GrabarVideoController implements Initializable {
 
                 Platform.runLater(() -> {
                     addRecentActivity("❌",
-                            "Error al enviar segmento IP " + (segmentNumber + 1) + " via HTTP: " + e.getMessage(),
+                            "Error al enviar segmento " + (segmentNumber + 1) + " de " + selectedCamara.getDescripcion() + " via HTTP: " + e.getMessage(),
                             "just now");
                 });
             }
@@ -976,7 +981,7 @@ public class GrabarVideoController implements Initializable {
                 if (lastSegmentFile.exists() && lastSegmentFile.length() > 0) {
                     Platform.runLater(() -> {
                         addRecentActivity("📤",
-                                "Enviando último segmento IP (" + lastSegmentDuration + ") al servidor...",
+                                "Enviando último segmento de " + selectedCamara.getDescripcion() + " (" + lastSegmentDuration + ") al servidor...",
                                 "just now");
                     });
 
@@ -986,17 +991,17 @@ public class GrabarVideoController implements Initializable {
 
             cleanupRecordingResources();
 
-            addRecentActivity("🛑", "Grabación IP detenida - " + (currentSegmentNumber + 1) + " segmentos procesados", "just now");
+            addRecentActivity("🛑", "Grabación de " + selectedCamara.getDescripcion() + " detenida - " + (currentSegmentNumber + 1) + " segmentos procesados", "just now");
 
             recordBtn.setText("Record");
             recordBtn.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white; -fx-font-weight: bold;");
 
             timerLabel.setText("00:00:00");
-            statusValue.setText("Conectado a cámara IP");
+            statusValue.setText("Conectado a " + selectedCamara.getDescripcion());
             statusValue.setStyle("-fx-text-fill: #009900;");
 
             showAlert(Alert.AlertType.INFORMATION, "Grabación Completada",
-                    "Grabación de cámara IP finalizada con " + (currentSegmentNumber + 1) + " segmentos.\n" +
+                    "Grabación de " + selectedCamara.getDescripcion() + " finalizada con " + (currentSegmentNumber + 1) + " segmentos.\n" +
                             "Los segmentos han sido enviados automáticamente al servidor.");
 
         } catch (InterruptedException e) {
@@ -1008,7 +1013,7 @@ public class GrabarVideoController implements Initializable {
     public void stopAndSaveRecording() {
         if (isRecording) {
             Platform.runLater(() -> {
-                statusValue.setText("Terminando grabación IP por cierre de aplicación...");
+                statusValue.setText("Terminando grabación de " + selectedCamara.getDescripcion() + " por cierre de aplicación...");
             });
             stopRecording();
         }
@@ -1022,7 +1027,8 @@ public class GrabarVideoController implements Initializable {
             }
 
             String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-            File compressedVideo = new File(compressedDir, "compressed_IP_" + timestamp + ".mp4");
+            String cameraNameSafe = selectedCamara.getDescripcion().replaceAll("[^a-zA-Z0-9]", "_");
+            File compressedVideo = new File(compressedDir, "compressed_" + cameraNameSafe + "_" + timestamp + ".mp4");
 
             VideoCapture capture = new VideoCapture(originalVideo.getAbsolutePath());
 
@@ -1069,11 +1075,11 @@ public class GrabarVideoController implements Initializable {
                 long compressedSize = compressedVideo.length() / 1024;
                 double compressionRatio = (1 - (double)compressedSize / originalSize) * 100;
 
-                System.out.println("Archivo original IP: " + originalVideo.getName() +
+                System.out.println("Archivo original " + selectedCamara.getDescripcion() + ": " + originalVideo.getName() +
                         " - Tamaño: " + originalSize + " KB");
-                System.out.println("Archivo comprimido IP: " + compressedVideo.getName() +
+                System.out.println("Archivo comprimido " + selectedCamara.getDescripcion() + ": " + compressedVideo.getName() +
                         " - Tamaño: " + compressedSize + " KB");
-                System.out.println("Ratio de compresión IP: " + String.format("%.2f", compressionRatio) + "%");
+                System.out.println("Ratio de compresión " + selectedCamara.getDescripcion() + ": " + String.format("%.2f", compressionRatio) + "%");
 
                 // Limitar compresión máxima al 50%
                 if (compressionRatio > 50) {
@@ -1085,18 +1091,18 @@ public class GrabarVideoController implements Initializable {
                 // Si la compresión es mínima (menos del 10%), usar original
                 if (compressionRatio < 10) {
                     compressedVideo.delete();
-                    System.out.println("Compresión mínima, usando archivo original IP.");
+                    System.out.println("Compresión mínima, usando archivo original de " + selectedCamara.getDescripcion() + ".");
                     return originalVideo;
                 }
 
                 return compressedVideo;
             } else {
-                System.err.println("Fallo en la compresión de video IP. Usando archivo original.");
+                System.err.println("Fallo en la compresión de video de " + selectedCamara.getDescripcion() + ". Usando archivo original.");
                 return originalVideo;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Error al comprimir video IP: " + e.getMessage());
+            System.err.println("Error al comprimir video de " + selectedCamara.getDescripcion() + ": " + e.getMessage());
             return originalVideo;
         }
     }
@@ -1227,7 +1233,7 @@ public class GrabarVideoController implements Initializable {
     }
 
     public String getCameraURL() {
-        return IP_CAMERA_URL;
+        return currentCameraUrl;
     }
 
     public WebSocketStatusIndicator getWebSocketStatusIndicator() {

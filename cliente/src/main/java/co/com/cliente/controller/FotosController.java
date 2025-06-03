@@ -3,6 +3,7 @@ package co.com.cliente.controller;
 import co.com.cliente.dto.ImagenDTO;
 import co.com.cliente.httpRequest.HttpService;
 import co.com.cliente.httpRequest.JsonResponseHandler;
+import co.com.cliente.httpRequest.PropertiesLoader;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -38,7 +39,7 @@ public class FotosController implements Initializable {
 
     private ExecutorService executorService;
     private final int THUMBNAIL_SIZE = 200;
-    private final String API_BASE_URL = "http://localhost:9000/api/imagenes";
+    private final String API_BASE_URL = PropertiesLoader.getBaseUrl() + "/api/imagenes";
     private List<ImagenDTO> currentImages = new ArrayList<>();
 
     @Override

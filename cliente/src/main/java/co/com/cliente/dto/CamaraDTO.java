@@ -1,22 +1,54 @@
 package co.com.cliente.dto;
 
-import java.util.Date;
-
 public class CamaraDTO {
     private Long id;
+    private String ip;
+    private Integer puerto;
     private String descripcion;
     private Double coordenadax;
     private Double coordenaday;
     private String resolucion;
     private Long usuarioId;
 
-    // Getters and Setters
+    // Constructor vacío
+    public CamaraDTO() {}
+
+    // Constructor completo
+    public CamaraDTO(Long id, String ip, Integer puerto, String descripcion,
+                     Double coordenadax, Double coordenaday, String resolucion, Long usuarioId) {
+        this.id = id;
+        this.ip = ip;
+        this.puerto = puerto;
+        this.descripcion = descripcion;
+        this.coordenadax = coordenadax;
+        this.coordenaday = coordenaday;
+        this.resolucion = resolucion;
+        this.usuarioId = usuarioId;
+    }
+
+    // Getters y Setters
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public Integer getPuerto() {
+        return puerto;
+    }
+
+    public void setPuerto(Integer puerto) {
+        this.puerto = puerto;
     }
 
     public String getDescripcion() {
@@ -57,5 +89,24 @@ public class CamaraDTO {
 
     public void setUsuarioId(Long usuarioId) {
         this.usuarioId = usuarioId;
+    }
+
+    // Método para obtener la URL completa de la cámara
+    public String getCameraUrl() {
+        return "http://" + ip + ":" + puerto + "/shot.jpg";
+    }
+
+    @Override
+    public String toString() {
+        return "CamaraDTO{" +
+                "id=" + id +
+                ", ip='" + ip + '\'' +
+                ", puerto=" + puerto +
+                ", descripcion='" + descripcion + '\'' +
+                ", coordenadax=" + coordenadax +
+                ", coordenaday=" + coordenaday +
+                ", resolucion='" + resolucion + '\'' +
+                ", usuarioId=" + usuarioId +
+                '}';
     }
 }

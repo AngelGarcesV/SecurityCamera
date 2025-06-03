@@ -2,6 +2,7 @@ package co.com.cliente.controller;
 
 import co.com.cliente.dto.VideoDTO;
 import co.com.cliente.httpRequest.HttpService;
+import co.com.cliente.httpRequest.PropertiesLoader;
 import co.com.cliente.redis.RedisCache;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -53,10 +54,10 @@ public class VideosController implements Initializable {
 
     private File tempDir;
     private Long usuarioId = 2L; // ID del usuario actual (podrías pasarlo como parámetro)
-    private static final String API_GET_VIDEOS_URL = "http://localhost:9000/api/video/usuario/";
-    private static final String API_GET_VIDEO_URL = "http://localhost:9000/api/video/";
-    private static final String API_UPDATE_VIDEO_URL = "http://localhost:9000/api/video/update";
-    private static final String API_DELETE_VIDEO_URL = "http://localhost:9000/api/video/";
+    private static final String API_GET_VIDEOS_URL = PropertiesLoader.getBaseUrl()+"/api/video/usuario/";
+    private static final String API_GET_VIDEO_URL = PropertiesLoader.getBaseUrl()+"/api/video/";
+    private static final String API_UPDATE_VIDEO_URL = PropertiesLoader.getBaseUrl()+"/api/video/update";
+    private static final String API_DELETE_VIDEO_URL = PropertiesLoader.getBaseUrl()+"/api/video/";
 
     private boolean mostrandoCache = true;
     private List<VideoDTO> videos = new ArrayList<>();
@@ -551,7 +552,7 @@ public class VideosController implements Initializable {
                     updateJson.put("usuarioId", video.getUsuarioId());
 
                     // Enviar solicitud de actualización
-                    String updateResponse = HttpService.getInstance().sendPostRequest(API_UPDATE_VIDEO_URL, updateJson.toString());
+                    String updateResponse = HttpService.getInstance().sendPutRequest(API_UPDATE_VIDEO_URL, updateJson.toString());
 
                     Platform.runLater(() -> {
                         showAlert(Alert.AlertType.INFORMATION, "Video actualizado",

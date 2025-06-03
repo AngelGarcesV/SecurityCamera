@@ -1,6 +1,7 @@
 package co.com.cliente.controller;
 
 import co.com.cliente.httpRequest.HttpService;
+import co.com.cliente.httpRequest.PropertiesLoader;
 import com.jfoenix.controls.JFXButton;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -139,7 +140,7 @@ public class MainController implements Initializable {
     }
 
     private boolean authenticateUser(String email, String password) {
-        String url = "http://localhost:9000/api/auth/login";
+        String url = PropertiesLoader.getBaseUrl()+ "/api/auth/login";
 
         // Crear el objeto JSON para la solicitud de autenticación
         JSONObject requestJson = new JSONObject();

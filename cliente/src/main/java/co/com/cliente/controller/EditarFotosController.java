@@ -34,6 +34,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import co.com.cliente.httpRequest.PropertiesLoader;
 
 public class EditarFotosController implements Initializable {
 
@@ -514,8 +515,10 @@ public class EditarFotosController implements Initializable {
                     jsonRequest.put("fecha", isoFormat.format(new Date()));
 
                     // Enviar al servidor
+
                     HttpService.getInstance().sendPostRequest(
-                            "http://localhost:9000/api/imagenes/save",
+                            PropertiesLoader.getBaseUrl() +
+                            "/api/imagenes/save",
                             jsonRequest.toString()
                     );
 
