@@ -70,7 +70,7 @@ public class HttpService {
     public String getUserIdFromClaims(){
         try {
             Map<String, Claim> claims = this.getJwtClaims();
-            Claim claim = claims.get("userId");; // Example claim
+            Claim claim = claims.get("userId");;
             String userId = claim.asInt().toString();
             return userId;
         } catch (Exception e) {
@@ -130,7 +130,7 @@ public class HttpService {
     }
 
     public String uploadVideoFile(String urlString, File videoFile, String nombre, Date fecha, String duracion, Long camaraId, Long usuarioId) throws IOException {
-        // Generar un boundary único para separar las partes del multipart
+
         String boundary = "------------------------" + UUID.randomUUID().toString();
 
         URL url = new URL(urlString);
@@ -140,21 +140,21 @@ public class HttpService {
         connection.setDoOutput(true);
 
         try (OutputStream os = connection.getOutputStream()) {
-            // Formato de fecha para enviar al servidor
+
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             String fechaStr = sdf.format(fecha);
 
-            // Añadir parámetros de texto
+
             writeFormField(os, "nombre", nombre, boundary);
             writeFormField(os, "fecha", fechaStr, boundary);
             writeFormField(os, "duracion", duracion, boundary);
             writeFormField(os, "camaraId", camaraId.toString(), boundary);
             writeFormField(os, "usuarioId", usuarioId.toString(), boundary);
 
-            // Añadir el archivo de video
+
             writeBinaryFile(os, "video", videoFile, boundary);
 
-            // Cerrar el multipart
+
             String endBoundary = "\r\n--" + boundary + "--\r\n";
             os.write(endBoundary.getBytes(StandardCharsets.UTF_8));
         }
@@ -185,7 +185,7 @@ public class HttpService {
     }
 
     public String updateVideoFile(String urlString, Long videoId, File videoFile, String nombre, Date fecha, String duracion) throws IOException {
-        // Generar un boundary único para separar las partes del multipart
+
         String boundary = "------------------------" + UUID.randomUUID().toString();
 
         URL url = new URL(urlString + "/" + videoId);
@@ -195,7 +195,7 @@ public class HttpService {
         connection.setDoOutput(true);
 
         try (OutputStream os = connection.getOutputStream()) {
-            // Añadir parámetros de texto
+
             writeFormField(os, "nombre", nombre, boundary);
 
             if (fecha != null) {
@@ -208,12 +208,12 @@ public class HttpService {
                 writeFormField(os, "duracion", duracion, boundary);
             }
 
-            // Añadir el archivo de video si se proporciona
+
             if (videoFile != null) {
                 writeBinaryFile(os, "video", videoFile, boundary);
             }
 
-            // Cerrar el multipart
+
             String endBoundary = "\r\n--" + boundary + "--\r\n";
             os.write(endBoundary.getBytes(StandardCharsets.UTF_8));
         }
@@ -253,7 +253,7 @@ public class HttpService {
 
         os.write(fileHeader.getBytes(StandardCharsets.UTF_8));
 
-        // Escribir los datos del archivo
+
         Files.copy(file.toPath(), os);
     }
 
@@ -268,7 +268,7 @@ public class HttpService {
         } else if (fileName.toLowerCase().endsWith(".wmv")) {
             return "video/x-ms-wmv";
         } else {
-            return "application/octet-stream"; // Tipo genérico si no se reconoce
+            return "application/octet-stream";
         }
     }
             }

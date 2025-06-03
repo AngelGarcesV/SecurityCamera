@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -25,8 +26,7 @@ public class VideoWebSocketClient {
     private VideoUploadCallback currentCallback;
     private CountDownLatch connectionLatch;
 
-    // Configuración de chunks
-    private static final int CHUNK_SIZE = 64 * 1024; // 64KB por chunk
+    private static final int CHUNK_SIZE = 64 * 1024;
 
     public interface VideoUploadCallback {
         void onUploadStarted();
@@ -82,18 +82,13 @@ public class VideoWebSocketClient {
 
     public CompletableFuture<Boolean> connect() {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
-
         if (isConnected) {
             future.complete(true);
             return future;
         }
-
         connectionLatch = new CountDownLatch(1);
-
         try {
             client.connect();
-
-            // Esperar conexión en un hilo separado
             new Thread(() -> {
                 try {
                     boolean connected = connectionLatch.await(10, TimeUnit.SECONDS);
@@ -102,12 +97,10 @@ public class VideoWebSocketClient {
                     future.complete(false);
                 }
             }).start();
-
         } catch (Exception e) {
             e.printStackTrace();
             future.complete(false);
         }
-
         return future;
     }
 
@@ -120,23 +113,18 @@ public class VideoWebSocketClient {
 
     public CompletableFuture<Boolean> uploadVideo(File videoFile, String videoName, String duration,
                                                   Long camaraId, Long usuarioId, VideoUploadCallback callback) {
-
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         this.currentCallback = callback;
-
         if (!isConnected) {
             callback.onError("WebSocket not connected");
             future.complete(false);
             return future;
         }
-
         if (!videoFile.exists()) {
             callback.onError("Video file does not exist");
             future.complete(false);
             return future;
         }
-
-        // Ejecutar upload en hilo separado para no bloquear UI
         new Thread(() -> {
             try {
                 boolean success = performVideoUpload(videoFile, videoName, duration, camaraId, usuarioId);
@@ -150,11 +138,10 @@ public class VideoWebSocketClient {
 
         return future;
     }
-
+/*
     private boolean performVideoUpload(File videoFile, String videoName, String duration,
                                        Long camaraId, Long usuarioId) throws Exception {
 
-        // 1. Enviar mensaje de inicio de upload
         Map<String, Object> startMessage = new HashMap<>();
         startMessage.put("type", "video_upload_start");
         startMessage.put("fileName", videoFile.getName());
@@ -169,10 +156,8 @@ public class VideoWebSocketClient {
 
         Platform.runLater(() -> currentCallback.onUploadStarted());
 
-        // 2. Esperar confirmación de inicio
-        Thread.sleep(500); // Pequeña pausa para asegurar que el servidor procesó el mensaje
+        Thread.sleep(500);
 
-        // 3. Enviar archivo en chunks
         try (FileInputStream fis = new FileInputStream(videoFile)) {
             byte[] buffer = new byte[CHUNK_SIZE];
             long totalBytes = videoFile.length();
@@ -180,17 +165,14 @@ public class VideoWebSocketClient {
             int bytesRead;
 
             while ((bytesRead = fis.read(buffer)) != -1) {
-                // Crear chunk del tamaño exacto leído
                 byte[] chunk = new byte[bytesRead];
                 System.arraycopy(buffer, 0, chunk, 0, bytesRead);
 
-                // Enviar chunk binario
                 ByteBuffer byteBuffer = ByteBuffer.wrap(chunk);
                 client.send(byteBuffer);
 
                 sentBytes += bytesRead;
 
-                // Actualizar progreso en UI thread
                 final long finalSentBytes = sentBytes;
                 final double progress = (double) sentBytes / totalBytes * 100;
 
@@ -198,12 +180,10 @@ public class VideoWebSocketClient {
                         currentCallback.onProgress(progress, finalSentBytes, totalBytes)
                 );
 
-                // Pequeña pausa para evitar saturar la conexión
                 Thread.sleep(10);
             }
         }
 
-        // 4. Enviar mensaje de completado
         Map<String, Object> completeMessage = new HashMap<>();
         completeMessage.put("type", "video_upload_complete");
 
@@ -211,6 +191,63 @@ public class VideoWebSocketClient {
         client.send(completeMessageJson);
 
         return true;
+    }
+*/
+    private boolean performVideoUpload(File videoFile, String videoName, String duration,
+                                       Long camaraId, Long usuarioId) throws Exception {
+
+        sendUploadStartMessage(videoFile, videoName, duration, camaraId, usuarioId);
+        Platform.runLater(() -> currentCallback.onUploadStarted());
+        Thread.sleep(500);
+        uploadVideoChunks(videoFile);
+        sendUploadCompleteMessage();
+        return true;
+    }
+    private void sendUploadStartMessage(File videoFile, String videoName, String duration,
+                                        Long camaraId, Long usuarioId) throws IOException {
+        Map<String, Object> startMessage = new HashMap<>();
+        startMessage.put("type", "video_upload_start");
+        startMessage.put("fileName", videoFile.getName());
+        startMessage.put("videoName", videoName);
+        startMessage.put("fileSize", videoFile.length());
+        startMessage.put("duration", duration);
+        startMessage.put("camaraId", camaraId);
+        startMessage.put("usuarioId", usuarioId);
+
+        String startMessageJson = objectMapper.writeValueAsString(startMessage);
+        client.send(startMessageJson);
+    }
+
+    private void uploadVideoChunks(File videoFile) throws IOException, InterruptedException {
+        try (FileInputStream fis = new FileInputStream(videoFile)) {
+            byte[] buffer = new byte[CHUNK_SIZE];
+            long totalBytes = videoFile.length();
+            long sentBytes = 0;
+            int bytesRead;
+
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                byte[] chunk = Arrays.copyOf(buffer, bytesRead);
+                client.send(ByteBuffer.wrap(chunk));
+
+                sentBytes += bytesRead;
+                double progress = (double) sentBytes / totalBytes * 100;
+                long finalSentBytes = sentBytes;
+
+                Platform.runLater(() ->
+                        currentCallback.onProgress(progress, finalSentBytes, totalBytes)
+                );
+
+                Thread.sleep(10);
+            }
+        }
+    }
+
+    private void sendUploadCompleteMessage() throws IOException {
+        Map<String, Object> completeMessage = new HashMap<>();
+        completeMessage.put("type", "video_upload_complete");
+
+        String completeMessageJson = objectMapper.writeValueAsString(completeMessage);
+        client.send(completeMessageJson);
     }
 
     private void handleTextMessage(String message) {
@@ -228,7 +265,6 @@ public class VideoWebSocketClient {
                     break;
 
                 case "upload_progress":
-                    // El progreso se maneja en el cliente, pero podríamos usar este para verificación
                     break;
 
                 case "upload_success":

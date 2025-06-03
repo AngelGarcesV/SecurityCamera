@@ -10,7 +10,6 @@ public class PoolFiltroBrillo {
     private static PoolFiltroBrillo instance;
 
     private PoolFiltroBrillo() {
-        // Inicializar el pool con algunos filtros
         for (int i = 0; i < 5; i++) {
             pool.offer(new FiltroBrillo());
         }

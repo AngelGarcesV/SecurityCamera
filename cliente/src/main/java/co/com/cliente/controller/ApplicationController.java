@@ -59,7 +59,6 @@ public class ApplicationController implements Initializable {
         if (currentViewIndex == selectedIndex) {
             return;
         }
-
         for (int i = 0; i < optionPanes.length; i++) {
             if (i == selectedIndex) {
                 optionPanes[i].setStyle("-fx-background-color: #333333;");
@@ -103,7 +102,6 @@ public class ApplicationController implements Initializable {
                 fxmlPath = "/co/com/cliente/views/fotos-view.fxml";
                 break;
             case 2:
-                // Cambiamos la ruta para que cargue la vista de selección de cámara primero
                 fxmlPath = "/co/com/cliente/views/select-camara-view.fxml";
                 break;
             default:
@@ -124,7 +122,6 @@ public class ApplicationController implements Initializable {
         }
     }
 
-    // Método público para cargar la vista de editar fotos desde FotosController
     public void loadEditarFotosView() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
@@ -133,7 +130,6 @@ public class ApplicationController implements Initializable {
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
 
-            // Actualizar el título
             titleLabel.setText("EDITAR FOTOS");
 
         } catch (IOException e) {

@@ -32,8 +32,6 @@ public class SelectCamaraController implements Initializable {
     @FXML
     private ListView<CamaraDTO> camaraListView;
 
-    @FXML
-    private Button seleccionarButton;
 
     @FXML
     private Label errorLabel;
@@ -50,7 +48,7 @@ public class SelectCamaraController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Configurar la celda personalizada para el ListView
+
         camaraListView.setCellFactory(new Callback<ListView<CamaraDTO>, ListCell<CamaraDTO>>() {
             @Override
             public ListCell<CamaraDTO> call(ListView<CamaraDTO> param) {
@@ -62,17 +60,17 @@ public class SelectCamaraController implements Initializable {
                             setGraphic(null);
                             setText(null);
                         } else {
-                            // Crear un diseño personalizado para cada cámara
+
                             VBox container = new VBox(5);
                             container.setStyle("-fx-padding: 10; -fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-radius: 5;");
 
                             HBox headerBox = new HBox(10);
 
-                            // Indicador de estado
+
                             Label statusIndicator = new Label("●");
                             statusIndicator.setStyle("-fx-text-fill: #4CAF50; -fx-font-size: 16px;");
 
-                            // Información principal
+
                             VBox infoBox = new VBox(2);
                             Label nameLabel = new Label(camara.getDescripcion());
                             nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
@@ -95,7 +93,7 @@ public class SelectCamaraController implements Initializable {
 
         camaraListView.setItems(camarasDisponibles);
 
-        // Crear indicador de carga si no existe en el FXML
+
         if (loadingIndicator == null) {
             loadingIndicator = new ProgressIndicator();
             loadingIndicator.setVisible(false);
@@ -105,14 +103,13 @@ public class SelectCamaraController implements Initializable {
             statusLabel = new Label();
         }
 
-        // Cargar y probar conexiones a las cámaras
+
         loadAndTestCamaras();
     }
 
     private void loadAndTestCamaras() {
         Platform.runLater(() -> {
             errorLabel.setVisible(false);
-            seleccionarButton.setDisable(true);
             if (loadingIndicator != null) {
                 loadingIndicator.setVisible(true);
             }
@@ -147,7 +144,7 @@ public class SelectCamaraController implements Initializable {
                 }
             });
 
-            // Probar conexión a cada cámara en paralelo
+
             CompletableFuture<?>[] futures = camerasList.stream()
                     .map(this::testCameraConnection)
                     .toArray(CompletableFuture[]::new);
@@ -174,12 +171,10 @@ public class SelectCamaraController implements Initializable {
                     if (statusLabel != null) {
                         statusLabel.setText("No hay cámaras disponibles");
                     }
-                    seleccionarButton.setDisable(true);
                 } else {
                     errorLabel.setVisible(false);
-                    seleccionarButton.setDisable(false);
 
-                    // Seleccionar la primera cámara por defecto
+
                     camaraListView.getSelectionModel().select(0);
 
                     if (statusLabel != null) {
@@ -213,13 +208,13 @@ public class SelectCamaraController implements Initializable {
                 try {
                     URL url = new URL(cameraUrl);
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setConnectTimeout(3000); // 3 segundos timeout
+                    connection.setConnectTimeout(3000);
                     connection.setReadTimeout(3000);
                     connection.setRequestMethod("GET");
 
                     int responseCode = connection.getResponseCode();
                     if (responseCode == HttpURLConnection.HTTP_OK) {
-                        // Verificar que realmente hay contenido de imagen
+
                         String contentType = connection.getContentType();
                         if (contentType != null && contentType.startsWith("image/")) {
                             connected = true;
@@ -234,7 +229,7 @@ public class SelectCamaraController implements Initializable {
 
                     if (attempts < maxAttempts) {
                         try {
-                            Thread.sleep(1000); // Esperar 1 segundo entre intentos
+                            Thread.sleep(1000);
                         } catch (InterruptedException ie) {
                             Thread.currentThread().interrupt();
                             break;
@@ -256,43 +251,13 @@ public class SelectCamaraController implements Initializable {
     }
 
     @FXML
-    private void handleSeleccionarButtonClick() {
-        CamaraDTO selectedCamara = camaraListView.getSelectionModel().getSelectedItem();
-
-        if (selectedCamara == null) {
-            showError("Por favor, seleccione una cámara.");
-            return;
-        }
-
-        try {
-            // Cargar la vista de grabar video con la cámara seleccionada
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/grabar-video-view.fxml"));
-            Parent view = loader.load();
-
-            // Obtener el controlador y pasarle la cámara seleccionada
-            GrabarVideoController controller = loader.getController();
-            controller.setCamara(selectedCamara);
-
-            // Reemplazar la vista actual con la de grabación
-            StackPane contentArea = (StackPane) camaraListView.getScene().lookup("#contentArea");
-            if (contentArea != null) {
-                contentArea.getChildren().clear();
-                contentArea.getChildren().add(view);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            showError("Error al cargar la vista de grabación: " + e.getMessage());
-        }
-    }
-
-    @FXML
     private void handleMultiViewButtonClick() {
         try {
-            // Cargar la vista múltiple de cámaras
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/multi-camera-view.fxml"));
             Parent view = loader.load();
 
-            // Reemplazar la vista actual con la vista múltiple
+
             StackPane contentArea = (StackPane) camaraListView.getScene().lookup("#contentArea");
             if (contentArea != null) {
                 contentArea.getChildren().clear();
@@ -316,7 +281,7 @@ public class SelectCamaraController implements Initializable {
         errorLabel.setStyle("-fx-text-fill: #f44336;");
     }
 
-    // Limpiar recursos cuando se cierre la ventana
+
     public void cleanup() {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdown();

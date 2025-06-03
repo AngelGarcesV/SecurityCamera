@@ -38,7 +38,7 @@ import co.com.cliente.httpRequest.PropertiesLoader;
 
 public class EditarFotosController implements Initializable {
 
-    // Componentes FXML - Vista de imagen
+
     @FXML
     private ImageView imageView;
 
@@ -48,7 +48,7 @@ public class EditarFotosController implements Initializable {
     @FXML
     private AnchorPane imageContainer;
 
-    // Componentes FXML - Controles básicos
+
     @FXML
     private Button selectImageBtn;
 
@@ -70,7 +70,7 @@ public class EditarFotosController implements Initializable {
     @FXML
     private Label imageInfoLabel;
 
-    // Componentes FXML - Controles de brillo
+
     @FXML
     private Button increaseBrightnessBtn;
 
@@ -95,47 +95,47 @@ public class EditarFotosController implements Initializable {
     @FXML
     private Button brightBtn;
 
-    // Variables de control
+
     private ImagenDTO imagenOriginal;
     private BufferedImage currentBufferedImage;
     private BufferedImage originalBufferedImage;
     private boolean hasUnsavedChanges = false;
     private ExecutorService executorService;
 
-    // Pools de filtros
+
     private PoolFiltroBrillo poolBrillo;
     private PoolFiltroRotar poolRotar;
     private PoolFiltroEscalaGrises poolEscalaGrises;
 
-    // Control de brillo
-    private float currentBrightnessLevel = 100; // Porcentaje
-    private static final float BRIGHTNESS_STEP = 20; // Incremento/decremento por clic
-    private static final float MIN_BRIGHTNESS = 10;  // Mínimo 10%
-    private static final float MAX_BRIGHTNESS = 300; // Máximo 300%
 
-    // Listener para el slider
+    private float currentBrightnessLevel = 100;
+    private static final float BRIGHTNESS_STEP = 20;
+    private static final float MIN_BRIGHTNESS = 10;
+    private static final float MAX_BRIGHTNESS = 300;
+
+
     private ChangeListener<Number> brightnessSliderListener;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         executorService = Executors.newFixedThreadPool(3);
 
-        // Inicializar pools
+
         poolBrillo = PoolFiltroBrillo.getInstance();
         poolRotar = PoolFiltroRotar.getInstance();
         poolEscalaGrises = PoolFiltroEscalaGrises.getInstance();
 
-        // Configurar estado inicial
+
         updateUIState(false);
         resetBrightnessLevel();
 
-        // Configurar listener del slider
+
         initializeBrightnessSlider();
 
-        // Configurar estilos hover
+
         configureButtonHoverEffects();
 
-        // Configurar tooltips
+
         configureTooltips();
     }
 
@@ -149,7 +149,7 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-    // ==================== MANEJADORES DE EVENTOS ====================
+
 
     @FXML
     private void handleSelectImage(ActionEvent event) {
@@ -188,7 +188,7 @@ public class EditarFotosController implements Initializable {
     private void handleBrightnessSlider() {
         if (currentBufferedImage != null && !brightnessSlider.isValueChanging()) {
             float newBrightness = (float) brightnessSlider.getValue();
-            if (Math.abs(newBrightness - currentBrightnessLevel) > 5) { // Evitar cambios menores
+            if (Math.abs(newBrightness - currentBrightnessLevel) > 5) {
                 applyBrightnessFilter(newBrightness, "Slider");
             }
         }
@@ -268,7 +268,7 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-    // ==================== MÉTODOS DE CARGA DE IMÁGENES ====================
+
 
     private void loadImageFromDTO(ImagenDTO imagen) {
         Task<Void> loadTask = new Task<Void>() {
@@ -336,7 +336,7 @@ public class EditarFotosController implements Initializable {
         executorService.submit(loadTask);
     }
 
-    // ==================== MÉTODOS DE APLICACIÓN DE FILTROS ====================
+
 
     private void applyBrightnessFilter(float targetBrightness, String action) {
         Task<Void> filterTask = new Task<Void>() {
@@ -344,22 +344,22 @@ public class EditarFotosController implements Initializable {
             protected Void call() throws Exception {
                 FiltroBrillo filtro = poolBrillo.obtener();
                 try {
-                    // Mostrar indicador de procesamiento
+
                     Platform.runLater(() -> {
                         if (brightnessLevelLabel != null) {
                             brightnessLevelLabel.setText("Procesando...");
                         }
                         if (brightnessProgressBar != null) {
-                            brightnessProgressBar.setProgress(-1); // Indeterminado
+                            brightnessProgressBar.setProgress(-1);
                         }
                     });
 
-                    // Configurar el filtro
+
                     filtro.setBrilloRelativo((int) targetBrightness);
 
                     long startTime = System.currentTimeMillis();
 
-                    // Aplicar siempre sobre la imagen original para evitar degradación
+
                     BufferedImage sourceImage = originalBufferedImage != null ? originalBufferedImage : currentBufferedImage;
                     BufferedImage result = filtro.aplicar(sourceImage);
 
@@ -378,17 +378,17 @@ public class EditarFotosController implements Initializable {
                                     action, targetBrightness, (endTime - startTime));
                             updateImageInfo(message, currentBufferedImage);
 
-                            // Actualizar todos los controles
+
                             updateBrightnessButtonsState();
 
-                            // Log para debug
+
                             System.out.println(String.format("Brillo aplicado: %.0f%%, Factor: %.2f",
                                     targetBrightness, filtro.getFactorBrillo()));
                         } else {
                             showAlert(Alert.AlertType.ERROR, "Error",
                                     "No se pudo aplicar el filtro de brillo");
 
-                            // Restaurar indicadores
+
                             updateBrightnessIndicators();
                         }
                     });
@@ -397,7 +397,7 @@ public class EditarFotosController implements Initializable {
                     Platform.runLater(() -> {
                         showAlert(Alert.AlertType.ERROR, "Error",
                                 "Error al procesar brillo: " + e.getMessage());
-                        updateBrightnessIndicators(); // Restaurar indicadores
+                        updateBrightnessIndicators();
                     });
                     e.printStackTrace();
                 } finally {
@@ -425,7 +425,7 @@ public class EditarFotosController implements Initializable {
                     Platform.runLater(() -> {
                         if (result != null) {
                             currentBufferedImage = result;
-                            originalBufferedImage = deepCopy(result); // Actualizar original para rotación
+                            originalBufferedImage = deepCopy(result);
                             displayImage(currentBufferedImage);
                             hasUnsavedChanges = true;
                             updateSaveButtonState();
@@ -475,7 +475,7 @@ public class EditarFotosController implements Initializable {
         executorService.submit(filterTask);
     }
 
-    // ==================== MÉTODOS DE GUARDADO ====================
+
 
     private void saveEditedImage() {
         if (currentBufferedImage == null) return;
@@ -489,24 +489,24 @@ public class EditarFotosController implements Initializable {
                     byte[] imageBytes = baos.toByteArray();
                     String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
-                    // Crear JSON para enviar al servidor
+
                     JSONObject jsonRequest = new JSONObject();
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
                     String editedImageName = "Editada_" + timestamp;
 
                     if (imagenOriginal != null) {
-                        // Si es una imagen existente, crear nueva entrada
+
                         jsonRequest.put("nombre", imagenOriginal.getNombre() + "_editada_" + timestamp);
                         jsonRequest.put("camaraId", imagenOriginal.getCamaraId());
                         jsonRequest.put("usuarioId", imagenOriginal.getUsuarioId());
                     } else {
-                        // Si es una imagen nueva, crear registro
+
                         jsonRequest.put("nombre", editedImageName);
                         String userId = HttpService.getInstance().getUserIdFromClaims();
                         if (userId != null) {
                             jsonRequest.put("usuarioId", Integer.valueOf(userId));
                         }
-                        jsonRequest.put("camaraId", 1); // Valor por defecto
+                        jsonRequest.put("camaraId", 1);
                     }
 
                     jsonRequest.put("imagen", base64Image);
@@ -514,7 +514,7 @@ public class EditarFotosController implements Initializable {
                     SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                     jsonRequest.put("fecha", isoFormat.format(new Date()));
 
-                    // Enviar al servidor
+
 
                     HttpService.getInstance().sendPostRequest(
                             PropertiesLoader.getBaseUrl() +
@@ -544,7 +544,7 @@ public class EditarFotosController implements Initializable {
         executorService.submit(saveTask);
     }
 
-    // ==================== MÉTODOS DE VISUALIZACIÓN ====================
+
 
     private void displayImage(BufferedImage bufferedImage) {
         if (bufferedImage != null) {
@@ -557,7 +557,7 @@ public class EditarFotosController implements Initializable {
                 imageView.setImage(fxImage);
                 imageView.setVisible(true);
 
-                // Ajustar el tamaño de la imagen al contenedor
+
                 imageView.setFitWidth(580);
                 imageView.setFitHeight(400);
                 imageView.setPreserveRatio(true);
@@ -594,11 +594,11 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-    // ==================== MÉTODOS DE CONTROL DE BRILLO ====================
+
 
     private void initializeBrightnessSlider() {
         if (brightnessSlider != null) {
-            // Crear listener para evitar eventos circulares
+
             brightnessSliderListener = (obs, oldVal, newVal) -> {
                 if (!brightnessSlider.isValueChanging()) {
                     float newBrightness = newVal.floatValue();
@@ -610,7 +610,7 @@ public class EditarFotosController implements Initializable {
 
             brightnessSlider.valueProperty().addListener(brightnessSliderListener);
 
-            // Configurar el slider para actualizaciones en tiempo real durante drag
+
             brightnessSlider.setOnMouseDragged(e -> {
                 if (currentBufferedImage != null) {
                     float newBrightness = (float) brightnessSlider.getValue();
@@ -622,27 +622,27 @@ public class EditarFotosController implements Initializable {
     }
 
     private void resetBrightnessLevel() {
-        currentBrightnessLevel = 100; // Brillo normal
+        currentBrightnessLevel = 100;
         updateBrightnessButtonsState();
         updateBrightnessIndicators();
     }
 
     private void updateBrightnessButtonsState() {
-        // Deshabilitar botones según límites
+
         boolean canIncrease = currentBrightnessLevel < MAX_BRIGHTNESS;
         boolean canDecrease = currentBrightnessLevel > MIN_BRIGHTNESS;
 
         increaseBrightnessBtn.setDisable(!canIncrease);
         decreaseBrightnessBtn.setDisable(!canDecrease);
 
-        // Actualizar texto de los botones con información contextual
+
         increaseBrightnessBtn.setText(canIncrease ? "Aumentar (+)" : "Máximo");
         decreaseBrightnessBtn.setText(canDecrease ? "Disminuir (-)" : "Mínimo");
 
-        // Actualizar estilo de botones de preset según el nivel actual
+
         updatePresetButtonsStyle();
 
-        // Actualizar indicadores visuales
+
         updateBrightnessIndicators();
     }
 
@@ -652,22 +652,22 @@ public class EditarFotosController implements Initializable {
         }
 
         if (brightnessProgressBar != null) {
-            // Actualizar progress bar (normalizar entre 0 y 1)
+
             double progress = (currentBrightnessLevel - MIN_BRIGHTNESS) / (MAX_BRIGHTNESS - MIN_BRIGHTNESS);
             brightnessProgressBar.setProgress(Math.max(0, Math.min(1, progress)));
 
-            // Cambiar color del progress bar según el nivel
+
             if (currentBrightnessLevel < 70) {
-                brightnessProgressBar.setStyle("-fx-accent: #dc3545;"); // Rojo para bajo
+                brightnessProgressBar.setStyle("-fx-accent: #dc3545;");
             } else if (currentBrightnessLevel > 150) {
-                brightnessProgressBar.setStyle("-fx-accent: #ffc107;"); // Amarillo para alto
+                brightnessProgressBar.setStyle("-fx-accent: #ffc107;");
             } else {
-                brightnessProgressBar.setStyle("-fx-accent: #28a745;"); // Verde para normal
+                brightnessProgressBar.setStyle("-fx-accent: #28a745;");
             }
         }
 
         if (brightnessSlider != null && brightnessSliderListener != null) {
-            // Actualizar slider sin disparar el evento
+
             brightnessSlider.valueProperty().removeListener(brightnessSliderListener);
             brightnessSlider.setValue(currentBrightnessLevel);
             brightnessSlider.valueProperty().addListener(brightnessSliderListener);
@@ -675,7 +675,7 @@ public class EditarFotosController implements Initializable {
     }
 
     private void updatePresetButtonsStyle() {
-        // Resetear estilos
+
         String normalStyle = "-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 10px;";
         String activeStyle = "-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold;";
 
@@ -683,7 +683,7 @@ public class EditarFotosController implements Initializable {
         if (normalBtn != null) normalBtn.setStyle(normalStyle);
         if (brightBtn != null) brightBtn.setStyle(normalStyle);
 
-        // Marcar el preset activo
+
         if (currentBrightnessLevel <= 60 && darkBtn != null) {
             darkBtn.setStyle(activeStyle);
         } else if (currentBrightnessLevel >= 90 && currentBrightnessLevel <= 110 && normalBtn != null) {
@@ -693,16 +693,16 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-    // ==================== MÉTODOS DE ESTADO DE UI ====================
+
 
     private void updateUIState(boolean imageLoaded) {
-        // Controles básicos
+
         increaseBrightnessBtn.setDisable(!imageLoaded);
         decreaseBrightnessBtn.setDisable(!imageLoaded);
         rotateBtn.setDisable(!imageLoaded);
         grayscaleBtn.setDisable(!imageLoaded);
 
-        // Controles de brillo avanzados
+
         if (brightnessSlider != null) {
             brightnessSlider.setDisable(!imageLoaded);
         }
@@ -713,7 +713,7 @@ public class EditarFotosController implements Initializable {
         if (imageLoaded) {
             updateBrightnessButtonsState();
         } else {
-            // Reset cuando no hay imagen
+
             if (brightnessLevelLabel != null) {
                 brightnessLevelLabel.setText("--");
             }
@@ -736,40 +736,40 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-    // ==================== MÉTODOS DE CONFIGURACIÓN DE UI ====================
+
 
     private void configureButtonHoverEffects() {
-        // Efecto hover para botón de seleccionar imagen
+
         selectImageBtn.setOnMouseEntered(e ->
                 selectImageBtn.setStyle("-fx-background-color: #3367d6; -fx-text-fill: white; -fx-font-weight: bold;"));
         selectImageBtn.setOnMouseExited(e ->
                 selectImageBtn.setStyle("-fx-background-color: #4285f4; -fx-text-fill: white; -fx-font-weight: bold;"));
 
-        // Efecto hover para botón de aumentar brillo
+
         increaseBrightnessBtn.setOnMouseEntered(e ->
                 increaseBrightnessBtn.setStyle("-fx-background-color: #4285f4; -fx-text-fill: white; -fx-font-weight: bold;"));
         increaseBrightnessBtn.setOnMouseExited(e ->
                 increaseBrightnessBtn.setStyle("-fx-background-color: #5ba3f5; -fx-text-fill: white; -fx-font-weight: bold;"));
 
-        // Efecto hover para botón de disminuir brillo
+
         decreaseBrightnessBtn.setOnMouseEntered(e ->
                 decreaseBrightnessBtn.setStyle("-fx-background-color: #218838; -fx-text-fill: white; -fx-font-weight: bold;"));
         decreaseBrightnessBtn.setOnMouseExited(e ->
                 decreaseBrightnessBtn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;"));
 
-        // Efecto hover para botón rotar
+
         rotateBtn.setOnMouseEntered(e ->
                 rotateBtn.setStyle("-fx-background-color: #e0a800; -fx-text-fill: black; -fx-font-weight: bold;"));
         rotateBtn.setOnMouseExited(e ->
                 rotateBtn.setStyle("-fx-background-color: #ffc107; -fx-text-fill: black; -fx-font-weight: bold;"));
 
-        // Efecto hover para botón escala de grises
+
         grayscaleBtn.setOnMouseEntered(e ->
                 grayscaleBtn.setStyle("-fx-background-color: #c82333; -fx-text-fill: white; -fx-font-weight: bold;"));
         grayscaleBtn.setOnMouseExited(e ->
                 grayscaleBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-weight: bold;"));
 
-        // Efecto hover para botón guardar
+
         saveImageBtn.setOnMouseEntered(e -> {
             if (!saveImageBtn.isDisabled()) {
                 saveImageBtn.setStyle("-fx-background-color: #218838; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -781,7 +781,7 @@ public class EditarFotosController implements Initializable {
             }
         });
 
-        // Efecto hover para botón reset
+
         if (resetBtn != null) {
             resetBtn.setOnMouseEntered(e -> {
                 if (!resetBtn.isDisabled()) {
@@ -795,7 +795,7 @@ public class EditarFotosController implements Initializable {
             });
         }
 
-        // Efecto hover para botón atrás
+
         backButton.setOnMouseEntered(e ->
                 backButton.setStyle("-fx-background-color: #5a6268; -fx-text-fill: white; -fx-font-weight: bold;"));
         backButton.setOnMouseExited(e ->
@@ -846,7 +846,7 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-    // ==================== MÉTODOS AUXILIARES ====================
+
 
     private BufferedImage deepCopy(BufferedImage source) {
         if (source == null) return null;
@@ -874,7 +874,7 @@ public class EditarFotosController implements Initializable {
         }
     }
 
-    // Métodos auxiliares para navegación
+
     private StackPane getContentArea() {
         try {
             Parent root = backButton.getScene().getRoot();
@@ -941,7 +941,7 @@ public class EditarFotosController implements Initializable {
         });
     }
 
-    // ==================== MÉTODOS DE LIMPIEZA ====================
+
 
     public void onClose() {
         if (executorService != null && !executorService.isShutdown()) {
@@ -955,18 +955,18 @@ public class EditarFotosController implements Initializable {
             }
         }
 
-        // Limpiar listeners
+
         if (brightnessSlider != null && brightnessSliderListener != null) {
             brightnessSlider.valueProperty().removeListener(brightnessSliderListener);
         }
 
-        // Limpiar imágenes de memoria
+
         currentBufferedImage = null;
         originalBufferedImage = null;
         imagenOriginal = null;
     }
 
-    // ==================== MÉTODOS PÚBLICOS PARA INTEGRACIÓN ====================
+
 
     /**
      * Método público para verificar si hay cambios sin guardar

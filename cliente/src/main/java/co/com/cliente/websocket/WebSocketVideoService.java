@@ -1,5 +1,6 @@
 package co.com.cliente.websocket;
 
+import co.com.cliente.redis.RedisCache;
 import co.com.cliente.websocket.VideoWebSocketClient;
 import javafx.application.Platform;
 
@@ -9,8 +10,7 @@ import java.util.concurrent.CompletableFuture;
 public class WebSocketVideoService {
 
     private VideoWebSocketClient webSocketClient;
-    private static final String WEBSOCKET_URL = "ws://localhost:9000/ws/video";
-
+    private static final String WEBSOCKET_URL = "ws://192.168.1.18:9000/ws/video";
     public WebSocketVideoService() {
         webSocketClient = new VideoWebSocketClient(WEBSOCKET_URL);
     }

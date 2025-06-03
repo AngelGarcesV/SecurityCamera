@@ -10,7 +10,7 @@ public class PoolFiltroEscalaGrises {
     private static PoolFiltroEscalaGrises instance;
 
     private PoolFiltroEscalaGrises() {
-        // Inicializar el pool con algunos filtros
+
         for (int i = 0; i < 5; i++) {
             pool.offer(new FiltroEscalaGrises());
         }

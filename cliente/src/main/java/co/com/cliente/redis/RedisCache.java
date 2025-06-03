@@ -18,7 +18,7 @@ public class RedisCache {
     private static final int PORT = 6379;
     private static final String VIDEO_CACHE_KEY_PREFIX = "videos_user_";
     private static final int MAX_CACHED_VIDEOS = 5;
-    private static final int CONNECTION_TIMEOUT = 2000; // 2 segundos de timeout
+    private static final int CONNECTION_TIMEOUT = 2000;
 
     private static RedisCache instance;
     private Jedis jedis;
@@ -27,13 +27,10 @@ public class RedisCache {
     private AtomicBoolean intentadoConectar = new AtomicBoolean(false);
     private static final Logger LOGGER = Logger.getLogger(RedisCache.class.getName());
 
-    // Private constructor to prevent instantiation
     private RedisCache() {
         objectMapper = new ObjectMapper();
-        // No intentar conectar a Redis inmediatamente - lo haremos cuando sea necesario
     }
 
-    // Public method to get the single instance
     public static synchronized RedisCache getInstance() {
         if (instance == null) {
             instance = new RedisCache();
@@ -41,21 +38,15 @@ public class RedisCache {
         return instance;
     }
 
-    // Inicializar conexión en un método separado - conexión diferida
     private synchronized void inicializarConexion() {
-        // Si ya intentamos conectar, no lo intentamos de nuevo
         if (intentadoConectar.get()) {
             return;
         }
-
         intentadoConectar.set(true);
-
         try {
             LOGGER.info("Intentando conectar a Redis...");
-            // Configurar un timeout corto para evitar bloqueos largos
             jedis = new Jedis(HOST, PORT, CONNECTION_TIMEOUT);
 
-            // Probar la conexión con un ping
             String pong = jedis.ping();
             if ("PONG".equals(pong)) {
                 redisDisponible.set(true);
@@ -72,10 +63,8 @@ public class RedisCache {
         }
     }
 
-    // Método para comprobar si Redis está disponible
     public boolean isRedisDisponible() {
         if (!intentadoConectar.get()) {
-            // Inicializamos la conexión solo cuando se necesita por primera vez
             inicializarConexion();
         }
         return redisDisponible.get();
@@ -89,7 +78,7 @@ public class RedisCache {
             jedis.set(clave, json);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error al guardar en caché: " + e.getMessage(), e);
-            redisDisponible.set(false); // Marcar como no disponible si falla
+            redisDisponible.set(false);
         }
     }
 
@@ -103,17 +92,15 @@ public class RedisCache {
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error al obtener de caché: " + e.getMessage(), e);
-            redisDisponible.set(false); // Marcar como no disponible si falla
+            redisDisponible.set(false);
         }
         return null;
     }
 
-    // Método específico para guardar los últimos N videos de un usuario
     public void guardarVideosDeUsuario(Long usuarioId, List<VideoDTO> videos) {
         if (!isRedisDisponible()) return;
 
         try {
-            // Si hay más de MAX_CACHED_VIDEOS, solo guardamos los últimos N
             List<VideoDTO> videosAGuardar = videos;
             if (videos.size() > MAX_CACHED_VIDEOS) {
                 videosAGuardar = videos.subList(0, MAX_CACHED_VIDEOS);
@@ -123,11 +110,10 @@ public class RedisCache {
             guardarListaEnCache(clave, videosAGuardar);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error al guardar videos en caché: " + e.getMessage(), e);
-            redisDisponible.set(false); // Marcar como no disponible si falla
+            redisDisponible.set(false);
         }
     }
 
-    // Método específico para obtener los videos en caché de un usuario
     public List<VideoDTO> obtenerVideosDeUsuario(Long usuarioId) {
         if (!isRedisDisponible()) return new ArrayList<>();
 
@@ -136,7 +122,6 @@ public class RedisCache {
         return videos != null ? videos : new ArrayList<>();
     }
 
-    // Verificar si hay videos en caché para un usuario
     public boolean hayVideosEnCache(Long usuarioId) {
         if (!isRedisDisponible()) return false;
 
@@ -145,7 +130,7 @@ public class RedisCache {
             return jedis.exists(clave);
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error al verificar caché: " + e.getMessage(), e);
-            redisDisponible.set(false); // Marcar como no disponible si falla
+            redisDisponible.set(false);
             return false;
         }
     }

@@ -11,7 +11,7 @@ public class ImagenDTO {
     private Long camaraId;
     private Long usuarioId;
 
-    // Getters and Setters
+
     public Long getId() {
         return id;
     }

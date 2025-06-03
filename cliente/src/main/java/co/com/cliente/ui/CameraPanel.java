@@ -53,7 +53,7 @@ public class CameraPanel {
     private boolean isRunning = false;
     private Timer imageTimer;
 
-    // Variables de grabación
+
     private boolean isRecording = false;
     private VideoWriter videoWriter;
     private Mat currentFrame;
@@ -63,18 +63,18 @@ public class CameraPanel {
     private long recordingStartTime;
     private long segmentStartTime;
 
-    // Variables para grabación por segmentos
+
     private Timer segmentTimer;
     private int currentSegmentNumber = 0;
     private String currentSessionId;
     private boolean enableAutoUpload = true;
 
-    // Servicios externos
+
     private final ExecutorService executorService;
     private final WebSocketVideoService webSocketService;
     private final File recordingsDir;
 
-    // URLs de API
+
     private static final String API_SAVE_IMAGE_URL = PropertiesLoader.getBaseUrl() + "/api/imagenes/save";
 
     public CameraPanel(CamaraDTO camara, ExecutorService executorService,
@@ -84,7 +84,7 @@ public class CameraPanel {
         this.webSocketService = webSocketService;
         this.recordingsDir = recordingsDir;
 
-        // Crear panel principal
+
         panel = new VBox(5);
         panel.setAlignment(Pos.CENTER);
         panel.setStyle("-fx-background-color: white; -fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 5; -fx-background-radius: 5;");
@@ -92,27 +92,27 @@ public class CameraPanel {
         panel.setPrefSize(350, 300);
         panel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-        // Header con información de la cámara
+
         HBox header = createHeader();
 
-        // ImageView para mostrar la imagen de la cámara
+
         imageView = new ImageView();
         imageView.setFitWidth(330);
         imageView.setFitHeight(200);
         imageView.setPreserveRatio(true);
         imageView.setStyle("-fx-background-color: black;");
 
-        // Controles individuales
+
         HBox controls = createControls();
 
-        // Label de estado
+
         statusLabel = new Label("Conectando...");
         statusLabel.setTextFill(Color.ORANGE);
         statusLabel.setFont(Font.font(10));
 
         panel.getChildren().addAll(header, imageView, controls, statusLabel);
 
-        // Hacer que el panel sea responsive
+
         VBox.setVgrow(imageView, Priority.ALWAYS);
     }
 
@@ -165,9 +165,9 @@ public class CameraPanel {
                     refreshImage();
                 }
             }
-        }, 0, 100); // Actualizar cada 100ms para 10 FPS como en el individual
+        }, 0, 100);
     }
-
+/*
     public void refreshImage() {
         if (!isRunning) return;
 
@@ -184,21 +184,21 @@ public class CameraPanel {
                     Image image = new Image(new ByteArrayInputStream(imageData));
 
                     if (!image.isError()) {
-                        // Convertir a Mat para OpenCV (SIEMPRE, no solo cuando grabamos)
+
                         Mat newFrame = new Mat();
                         MatOfByte matOfByte = new MatOfByte(imageData);
                         newFrame = Imgcodecs.imdecode(matOfByte, Imgcodecs.IMREAD_COLOR);
 
                         if (!newFrame.empty()) {
                             synchronized (frameLock) {
-                                // Liberar frame anterior si existe
+
                                 if (currentFrame != null) {
                                     currentFrame.release();
                                 }
-                                currentFrame = newFrame.clone(); // Hacer copia del frame
+                                currentFrame = newFrame.clone();
                             }
 
-                            // Si estamos grabando, escribir frame al video
+
                             if (isRecording) {
                                 synchronized (videoWriterLock) {
                                     if (videoWriter != null && videoWriter.isOpened()) {
@@ -207,7 +207,7 @@ public class CameraPanel {
                                 }
                             }
                         }
-                        newFrame.release(); // Liberar el frame temporal
+                        newFrame.release();
 
                         Platform.runLater(() -> {
                             imageView.setImage(image);
@@ -232,6 +232,101 @@ public class CameraPanel {
             }
         }, executorService);
     }
+*/
+public void refreshImage() {
+    if (!isRunning) return;
+
+    CompletableFuture.runAsync(() -> {
+        try {
+            byte[] imageData = getImagefromCamera();
+            Image image = createFXImage(imageData);
+
+            if (!image.isError()) {
+                Mat newFrame = convertToMat(imageData);
+                if (!newFrame.empty()) {
+                    updateCurrentFrame(newFrame);
+                    writeFrameIfRecording(newFrame);
+                    releaseFrame(newFrame);
+                    updateUIWithImage(image);
+                } else {
+                    showImageError();
+                }
+            } else {
+                showImageError();
+            }
+        } catch (Exception e) {
+            showConnectionError();
+        }
+    }, executorService);
+}
+
+    private byte[] getImagefromCamera() throws IOException {
+        String cameraUrl = "http://" + camara.getIp() + ":" + camara.getPuerto() + "/shot.jpg";
+        URL url = new URL(cameraUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+
+        try (InputStream inputStream = connection.getInputStream()) {
+            return inputStream.readAllBytes();
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private Image createFXImage(byte[] imageData) {
+        return new Image(new ByteArrayInputStream(imageData));
+    }
+
+    private Mat convertToMat(byte[] imageData) {
+        MatOfByte matOfByte = new MatOfByte(imageData);
+        return Imgcodecs.imdecode(matOfByte, Imgcodecs.IMREAD_COLOR);
+    }
+
+    private void updateCurrentFrame(Mat newFrame) {
+        synchronized (frameLock) {
+            if (currentFrame != null) {
+                currentFrame.release();
+            }
+            currentFrame = newFrame.clone();
+        }
+    }
+    private void writeFrameIfRecording(Mat frame) {
+        if (isRecording) {
+            synchronized (videoWriterLock) {
+                if (videoWriter != null && videoWriter.isOpened()) {
+                    videoWriter.write(frame);
+                }
+            }
+        }
+    }
+
+    private void releaseFrame(Mat frame) {
+        frame.release();
+    }
+
+    private void updateUIWithImage(Image image) {
+        Platform.runLater(() -> {
+            imageView.setImage(image);
+            statusLabel.setText("Conectado - " + camara.getResolucion() +
+                    (isRecording ? " 🔴 GRABANDO" : ""));
+            statusLabel.setTextFill(isRecording ? Color.RED : Color.GREEN);
+        });
+    }
+
+    private void showImageError() {
+        Platform.runLater(() -> {
+            statusLabel.setText("Error en la imagen");
+            statusLabel.setTextFill(Color.RED);
+        });
+    }
+
+    private void showConnectionError() {
+        Platform.runLater(() -> {
+            statusLabel.setText("Sin conexión");
+            statusLabel.setTextFill(Color.RED);
+        });
+    }
 
     private void toggleRecording() {
         if (!isRecording) {
@@ -245,7 +340,7 @@ public class CameraPanel {
         if (isRecording) return;
 
         try {
-            // Verificar que tenemos un frame disponible
+
             synchronized (frameLock) {
                 if (currentFrame == null || currentFrame.empty()) {
                     throw new Exception("No hay imagen disponible para grabar de " + camara.getDescripcion());
@@ -257,14 +352,14 @@ public class CameraPanel {
             recordingStartTime = System.currentTimeMillis();
             segmentStartTime = recordingStartTime;
 
-            // Usar dimensiones del frame actual (IGUAL QUE EL INDIVIDUAL)
+
             int width, height;
             synchronized (frameLock) {
                 width = currentFrame.cols();
                 height = currentFrame.rows();
             }
 
-            double fps = 10; // FPS objetivo (75% de 10 como en el individual)
+            double fps = 10;
 
             createNewVideoSegment(width, height, fps);
 
@@ -276,7 +371,7 @@ public class CameraPanel {
                 snapshotButton.setDisable(false);
             });
 
-            // Iniciar timer de segmentos (60 segundos)
+
             if (enableAutoUpload) {
                 startSegmentTimer();
             }
@@ -350,7 +445,7 @@ public class CameraPanel {
                     });
                 }
             }
-        }, 60000, 60000); // Cada 60 segundos
+        }, 60000, 60000);
     }
 
     private void processCurrentSegment() {
@@ -359,7 +454,7 @@ public class CameraPanel {
         try {
             String completedSegmentFileName = currentVideoFileName;
 
-            // Calcular duración real del segmento
+
             long currentTime = System.currentTimeMillis();
             long segmentDurationMs = currentTime - segmentStartTime;
             String realSegmentDuration = formatDuration(segmentDurationMs);
@@ -378,11 +473,11 @@ public class CameraPanel {
                 sendSegmentToServer(completedSegmentFileName, currentSegmentNumber, realSegmentDuration);
             }
 
-            // Preparar siguiente segmento
-            currentSegmentNumber++;
-            segmentStartTime = currentTime; // Nuevo tiempo de inicio para el siguiente segmento
 
-            // Usar dimensiones del frame actual para el nuevo segmento
+            currentSegmentNumber++;
+            segmentStartTime = currentTime;
+
+
             int width, height;
             synchronized (frameLock) {
                 if (currentFrame != null && !currentFrame.empty()) {
@@ -418,7 +513,7 @@ public class CameraPanel {
                     return;
                 }
 
-                // Comprimir video antes de enviar
+
                 File compressedSegment = compressVideo(segmentFile);
 
                 String segmentName = camara.getDescripcion().replaceAll("[^a-zA-Z0-9]", "_") + "_Segmento_" + (segmentNumber + 1) + "_" +
@@ -430,7 +525,7 @@ public class CameraPanel {
                 });
 
                 if (webSocketService.isConnected()) {
-                    // Enviar via WebSocket
+
                     webSocketService.uploadVideo(
                             compressedSegment,
                             segmentName,
@@ -463,7 +558,7 @@ public class CameraPanel {
                                     System.out.println("✅ Segmento " + (segmentNumber + 1) + " de " + camara.getDescripcion() +
                                             " (" + realDuration + ") enviado exitosamente via WebSocket");
 
-                                    // Limpiar archivo temporal comprimido si es diferente del original
+
                                     if (!compressedSegment.equals(segmentFile)) {
                                         compressedSegment.delete();
                                     }
@@ -479,13 +574,13 @@ public class CameraPanel {
                                     System.err.println("❌ Error WebSocket segmento " + (segmentNumber + 1) +
                                             " de " + camara.getDescripcion() + ": " + error);
 
-                                    // Fallback a HTTP
+
                                     sendVideoViaHTTP(compressedSegment, segmentName, realDuration);
                                 }
                             }
                     );
                 } else {
-                    // Fallback a HTTP
+
                     sendVideoViaHTTP(compressedSegment, segmentName, realDuration);
                 }
 
@@ -504,15 +599,15 @@ public class CameraPanel {
 
         isRecording = false;
 
-        // Detener timer de segmentos
+
         if (segmentTimer != null) {
             segmentTimer.cancel();
             segmentTimer = null;
         }
 
-        // Procesar último segmento
+
         if (enableAutoUpload && currentVideoFileName != null && !currentVideoFileName.isEmpty()) {
-            // Calcular duración del último segmento
+
             long currentTime = System.currentTimeMillis();
             long lastSegmentDurationMs = currentTime - segmentStartTime;
             String lastSegmentDuration = formatDuration(lastSegmentDurationMs);
@@ -531,7 +626,7 @@ public class CameraPanel {
                 sendSegmentToServer(currentVideoFileName, currentSegmentNumber, lastSegmentDuration);
             }
         } else {
-            // Limpiar recursos si no hay auto-upload
+
             synchronized (videoWriterLock) {
                 if (videoWriter != null && videoWriter.isOpened()) {
                     videoWriter.release();
@@ -555,87 +650,6 @@ public class CameraPanel {
 
         System.out.println("🛑 Detenida grabación de " + camara.getDescripcion() +
                 " - " + (currentSegmentNumber + 1) + " segmentos procesados");
-    }
-
-    private void sendVideoToServer() {
-        CompletableFuture.runAsync(() -> {
-            try {
-                File videoFile = new File(currentVideoFileName);
-                if (!videoFile.exists() || videoFile.length() == 0) {
-                    System.err.println("Archivo de video no válido para " + camara.getDescripcion());
-                    return;
-                }
-
-                // Comprimir video antes de enviar
-                File compressedVideo = compressVideo(videoFile);
-
-                // Calcular duración real
-                long durationMs = System.currentTimeMillis() - recordingStartTime;
-                String duration = formatDuration(durationMs);
-
-                String videoName = camara.getDescripcion().replaceAll("[^a-zA-Z0-9]", "_") + "_" +
-                        new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-
-                if (webSocketService.isConnected()) {
-                    // Enviar via WebSocket
-                    webSocketService.uploadVideo(
-                            compressedVideo,
-                            videoName,
-                            duration,
-                            camara.getId(),
-                            camara.getUsuarioId(),
-                            new VideoUploadProgressCallback() {
-                                @Override
-                                public void onUploadStarted() {
-                                    Platform.runLater(() -> {
-                                        statusLabel.setText("Enviando video...");
-                                        statusLabel.setTextFill(Color.ORANGE);
-                                    });
-                                }
-
-                                @Override
-                                public void onProgress(double progress, long sentBytes, long totalBytes) {
-                                    Platform.runLater(() -> {
-                                        statusLabel.setText(String.format("Enviando %.0f%%", progress * 100));
-                                    });
-                                }
-
-                                @Override
-                                public void onUploadComplete(Long videoId) {
-                                    Platform.runLater(() -> {
-                                        statusLabel.setText("Video enviado ✅");
-                                        statusLabel.setTextFill(Color.GREEN);
-                                    });
-
-                                    // Limpiar archivo temporal
-                                    if (!compressedVideo.equals(videoFile)) {
-                                        compressedVideo.delete();
-                                    }
-                                }
-
-                                @Override
-                                public void onError(String error) {
-                                    Platform.runLater(() -> {
-                                        statusLabel.setText("Error al enviar");
-                                        statusLabel.setTextFill(Color.RED);
-                                    });
-                                    System.err.println("Error al enviar video de " + camara.getDescripcion() + ": " + error);
-                                }
-                            }
-                    );
-                } else {
-                    // Fallback a HTTP
-                    sendVideoViaHTTP(compressedVideo, videoName, duration);
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(() -> {
-                    statusLabel.setText("Error al procesar video");
-                    statusLabel.setTextFill(Color.RED);
-                });
-            }
-        }, executorService);
     }
 
     private void sendVideoViaHTTP(File videoFile, String videoName, String duration) {
@@ -669,7 +683,7 @@ public class CameraPanel {
 
     public boolean takeSnapshot(String batchId) {
         try {
-            // Capturar imagen actual
+
             String cameraUrl = "http://" + camara.getIp() + ":" + camara.getPuerto() + "/shot.jpg";
             URL url = new URL(cameraUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -686,7 +700,7 @@ public class CameraPanel {
                 throw new Exception("No se pudo capturar imagen");
             }
 
-            // Guardar localmente
+
             File snapshotsDir = new File(recordingsDir, "snapshots");
             if (!snapshotsDir.exists()) {
                 snapshotsDir.mkdirs();
@@ -700,7 +714,7 @@ public class CameraPanel {
                 fos.write(imageData);
             }
 
-            // Enviar al servidor
+
             sendSnapshotToServer(imageData, timestamp);
 
             System.out.println("📸 Snapshot de " + camara.getDescripcion() + " guardado: " + snapshotFileName);
@@ -736,7 +750,7 @@ public class CameraPanel {
                 HttpService.getInstance().sendPostRequest(API_SAVE_IMAGE_URL, jsonRequest.toString());
 
                 Platform.runLater(() -> {
-                    // Indicador temporal de éxito
+
                     statusLabel.setText("Snapshot enviado ✅");
                     Timer resetTimer = new Timer(true);
                     resetTimer.schedule(new TimerTask() {
@@ -779,7 +793,7 @@ public class CameraPanel {
             int originalHeight = (int) capture.get(Videoio.CAP_PROP_FRAME_HEIGHT);
             double originalFps = capture.get(Videoio.CAP_PROP_FPS);
 
-            // Compresión conservadora
+
             int newWidth = Math.max(480, originalWidth * 2 / 3);
             int newHeight = (int) (originalHeight * ((double) newWidth / originalWidth));
             double newFps = Math.max(6.0, Math.min(originalFps, 10.0));
@@ -815,7 +829,7 @@ public class CameraPanel {
                 long compressedSize = compressedVideo.length() / 1024;
                 double compressionRatio = (1 - (double)compressedSize / originalSize) * 100;
 
-                // Si la compresión es mínima, usar original
+
                 if (compressionRatio < 10) {
                     compressedVideo.delete();
                     return originalVideo;
@@ -863,7 +877,7 @@ public class CameraPanel {
         }
     }
 
-    // Getters
+
     public VBox getPanel() {
         return panel;
     }

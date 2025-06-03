@@ -44,14 +44,14 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Limpiar cualquier token JWT previo al iniciar la pantalla de login
+
         httpService.setJwtToken(null);
 
-        // Configurar evento para presionar Enter en los campos de texto
+
         emailinput.setOnKeyPressed(this::handleEnterKeyPressed);
         passwordinput.setOnKeyPressed(this::handleEnterKeyPressed);
 
-        // Inicialmente ocultar mensajes de error
+
         if (errorLabel != null) {
             errorLabel.setVisible(false);
         }
@@ -70,18 +70,18 @@ public class MainController implements Initializable {
 
     @FXML
     protected void onLoginButtonClick() {
-        // Validar que los campos no estén vacíos
+
         if (isInputValid()) {
             String email = emailinput.getText().trim();
             String password = passwordinput.getText();
 
-            // Mostrar indicador de carga (podrías añadir un spinner aquí)
+
             loginButton.setDisable(true);
             if (errorLabel != null) {
                 errorLabel.setVisible(false);
             }
 
-            // Realizar login en un hilo separado para no bloquear la UI
+
             new Thread(() -> {
                 try {
                     boolean isAuthenticated = authenticateUser(email, password);
@@ -142,7 +142,7 @@ public class MainController implements Initializable {
     private boolean authenticateUser(String email, String password) {
         String url = PropertiesLoader.getBaseUrl()+ "/api/auth/login";
 
-        // Crear el objeto JSON para la solicitud de autenticación
+
         JSONObject requestJson = new JSONObject();
         requestJson.put("correo", email);
         requestJson.put("password", password);
@@ -150,7 +150,7 @@ public class MainController implements Initializable {
         try {
             String responseText = httpService.sendPostRequest(url, requestJson.toString());
 
-            // Verificar si la respuesta es un JSON y extraer el token
+
             try {
                 JSONObject responseJson = new JSONObject(responseText);
                 if (responseJson.has("token")) {
@@ -158,17 +158,17 @@ public class MainController implements Initializable {
                     httpService.setJwtToken(token);
                     return true;
                 } else {
-                    // Si la respuesta es JSON pero no tiene token
+
                     return false;
                 }
             } catch (JSONException e) {
-                // Si la respuesta no es un JSON, asumimos que el token está en texto plano
+
                 httpService.setJwtToken(responseText);
                 return true;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return false; // Authentication failed
+            return false;
         }
     }
 

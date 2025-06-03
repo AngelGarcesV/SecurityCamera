@@ -6,7 +6,7 @@ public class UsuarioDTO {
     private String correo;
     private String rol;
 
-    // Getters and Setters
+
     public Long getId() {
         return id;
     }

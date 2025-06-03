@@ -53,7 +53,7 @@ public class VideosController implements Initializable {
     private Button verMasButton;
 
     private File tempDir;
-    private Long usuarioId = 2L; // ID del usuario actual (podrías pasarlo como parámetro)
+    private Long usuarioId = 2L;
     private static final String API_GET_VIDEOS_URL = PropertiesLoader.getBaseUrl()+"/api/video/usuario/";
     private static final String API_GET_VIDEO_URL = PropertiesLoader.getBaseUrl()+"/api/video/";
     private static final String API_UPDATE_VIDEO_URL = PropertiesLoader.getBaseUrl()+"/api/video/update";
@@ -64,7 +64,7 @@ public class VideosController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Inicializar componentes visuales
+
         if (statusLabel != null) {
             statusLabel.setText("Iniciando...");
         }
@@ -73,26 +73,26 @@ public class VideosController implements Initializable {
             verMasButton.setVisible(false);
         }
 
-        // Crear directorio temporal para videos descargados si es necesario
+
         tempDir = new File(System.getProperty("java.io.tmpdir") + "/security_camera_temp");
         if (!tempDir.exists()) {
             tempDir.mkdirs();
         }
 
-        // Posponer la carga de datos para evitar bloqueos durante la carga de FXML
+
         Platform.runLater(this::iniciarCargaDeVideos);
     }
 
-    // Método auxiliar para iniciar la carga después de que el FXML esté completamente cargado
+
     private void iniciarCargaDeVideos() {
         try {
-            // Comprobar si Redis está disponible y actuar en consecuencia
+
             RedisCache cache = RedisCache.getInstance();
             if (cache.isRedisDisponible()) {
-                // Redis está disponible, intentamos cargar desde caché
+
                 cargarVideosDesdeCache();
             } else {
-                // Redis no está disponible, cargamos directamente del servidor
+
                 mostrandoCache = false;
                 if (statusLabel != null) {
                     statusLabel.setText("Cargando videos desde el servidor...");
@@ -103,7 +103,7 @@ public class VideosController implements Initializable {
                 loadVideosFromServer();
             }
         } catch (Exception e) {
-            // Capturar cualquier excepción durante la inicialización
+
             e.printStackTrace();
             if (statusLabel != null) {
                 statusLabel.setText("Error al inicializar. Cargando desde el servidor...");
@@ -113,12 +113,12 @@ public class VideosController implements Initializable {
         }
     }
 
-    // Método para cargar videos desde la caché
+
     private void cargarVideosDesdeCache() {
         try {
             RedisCache cache = RedisCache.getInstance();
 
-            // Verificación adicional de disponibilidad
+
             if (!cache.isRedisDisponible()) {
                 mostrandoCache = false;
                 if (statusLabel != null) {
@@ -132,7 +132,7 @@ public class VideosController implements Initializable {
             }
 
             if (cache.hayVideosEnCache(usuarioId)) {
-                // Hay videos en caché, los cargamos
+
                 videos = cache.obtenerVideosDeUsuario(usuarioId);
                 mostrandoCache = true;
                 if (statusLabel != null) {
@@ -144,7 +144,7 @@ public class VideosController implements Initializable {
 
                 displayVideos();
             } else {
-                // No hay caché, cargamos del servidor
+
                 mostrandoCache = false;
                 if (statusLabel != null) {
                     statusLabel.setText("Cargando videos desde el servidor...");
@@ -156,7 +156,7 @@ public class VideosController implements Initializable {
                 loadVideosFromServer();
             }
         } catch (Exception e) {
-            // Capturar cualquier excepción durante la carga de caché
+
             e.printStackTrace();
             mostrandoCache = false;
             if (statusLabel != null) {
@@ -166,15 +166,15 @@ public class VideosController implements Initializable {
         }
     }
 
-    // Método para el botón "Ver Más"
+
     @FXML
     public void cargarTodosVideos() {
-        // Si ya estamos mostrando todos los videos, no hacemos nada
+
         if (!mostrandoCache) {
             return;
         }
 
-        // Cambiamos estado y cargamos todos los videos
+
         mostrandoCache = false;
         statusLabel.setText("Cargando todos los videos...");
         verMasButton.setVisible(false);
@@ -185,7 +185,7 @@ public class VideosController implements Initializable {
     private void loadVideosFromServer() {
         videoGrid.getChildren().clear();
 
-        // Mostrar indicador de carga
+
         ProgressIndicator loadingIndicator = new ProgressIndicator();
         loadingIndicator.setMaxSize(50, 50);
 
@@ -197,12 +197,12 @@ public class VideosController implements Initializable {
 
         videoGrid.add(loadingBox, 0, 0, 3, 1);
 
-        // Hacer la petición HTTP en un hilo separado
+
         new Thread(() -> {
             try {
                 String response = HttpService.getInstance().sendGetRequest(API_GET_VIDEOS_URL + usuarioId);
 
-                // Parsear la respuesta JSON
+
                 JSONArray jsonArray = new JSONArray(response);
                 videos.clear();
 
@@ -213,13 +213,13 @@ public class VideosController implements Initializable {
                     video.setId(videoJson.getLong("id"));
                     video.setNombre(videoJson.getString("nombre"));
 
-                    // Convertir fecha de JSON a Date
+
                     String fechaStr = videoJson.getString("fecha");
                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
                     Date fecha = format.parse(fechaStr);
                     video.setFecha(fecha);
 
-                    // El video en base64 solo se carga cuando se solicita específicamente
+
                     video.setVideo(null);
 
                     video.setDuracion(videoJson.getString("duracion"));
@@ -229,16 +229,16 @@ public class VideosController implements Initializable {
                     videos.add(video);
                 }
 
-                // Ordenar videos por fecha (más recientes primero)
+
                 videos.sort(Comparator.comparing(VideoDTO::getFecha).reversed());
 
-                // Guardar los últimos 5 videos en caché si Redis está disponible
+
                 RedisCache cache = RedisCache.getInstance();
                 if (cache.isRedisDisponible()) {
                     cache.guardarVideosDeUsuario(usuarioId, videos);
                 }
 
-                // Actualizar la interfaz en el hilo de JavaFX
+
                 Platform.runLater(() -> {
                     mostrandoCache = false;
                     statusLabel.setText("Mostrando todos los videos (" + videos.size() + ")");
@@ -271,15 +271,15 @@ public class VideosController implements Initializable {
     private void displayVideos() {
         videoGrid.getChildren().clear();
 
-        // Configurar espaciado adecuado
+
         videoGrid.setHgap(15);
         videoGrid.setVgap(20);
         videoGrid.setPadding(new Insets(10));
 
-        // Asegurar que el GridPane tenga el ancho adecuado
+
         videoGrid.setPrefWidth(880);
 
-        // Establecer restricciones de columna para mantener 3 columnas
+
         videoGrid.getColumnConstraints().clear();
         for (int i = 0; i < 3; i++) {
             javafx.scene.layout.ColumnConstraints column = new javafx.scene.layout.ColumnConstraints();
@@ -291,9 +291,9 @@ public class VideosController implements Initializable {
         if (videos.isEmpty()) {
             Label noVideosLabel = new Label("No hay videos disponibles.");
             noVideosLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
-            videoGrid.add(noVideosLabel, 0, 0, 3, 1); // Que ocupe las 3 columnas
+            videoGrid.add(noVideosLabel, 0, 0, 3, 1);
 
-            // Actualizamos la etiqueta de estado
+
             if (mostrandoCache) {
                 statusLabel.setText("No hay videos en caché");
                 verMasButton.setText("Cargar Videos");
@@ -311,11 +311,11 @@ public class VideosController implements Initializable {
         for (VideoDTO video : videos) {
             VBox videoItem = createVideoCard(video);
 
-            // Establecer ancho mínimo y preferido
+
             videoItem.setMinWidth(270);
             videoItem.setPrefWidth(280);
 
-            // Añadir al grid con las restricciones correctas
+
             videoGrid.add(videoItem, col, row);
             GridPane.setMargin(videoItem, new Insets(5));
 
@@ -329,26 +329,26 @@ public class VideosController implements Initializable {
 
     private VBox createVideoCard(VideoDTO video) {
         VBox item = new VBox(5);
-        item.setPrefSize(280, 240);  // Aumentado para acomodar más botones
+        item.setPrefSize(280, 240);
         item.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2); -fx-background-radius: 5;");
 
-        // Contenedor para la previsualización
+
         StackPane previewContainer = new StackPane();
         previewContainer.setMinHeight(150);
         previewContainer.setStyle("-fx-background-color: #333333; -fx-background-radius: 5 5 0 0;");
 
-        // Icono de video (placeholder hasta que tengamos una miniatura real)
+
         Label videoIcon = new Label("🎥");
         videoIcon.setFont(Font.font("System", 48));
         videoIcon.setTextFill(Color.WHITE);
 
         previewContainer.getChildren().add(videoIcon);
 
-        // Información del video
+
         VBox infoBox = new VBox(2);
         infoBox.setPadding(new Insets(5, 10, 5, 10));
 
-        // Nombre del video (truncado si es muy largo)
+
         String displayName = video.getNombre();
         if (displayName.length() > 25) {
             displayName = displayName.substring(0, 22) + "...";
@@ -358,7 +358,7 @@ public class VideosController implements Initializable {
         titleLabel.setFont(Font.font("System", FontWeight.BOLD, 12));
 
 
-        // Duración y fecha
+
         HBox metadataBox = new HBox(10);
 
         Label durationLabel = new Label("⏱ " + video.getDuracion());
@@ -378,7 +378,7 @@ public class VideosController implements Initializable {
 
         metadataBox.getChildren().addAll(durationLabel, spacer, dateLabel);
 
-        // Botones de acción (primera fila)
+
         HBox actionBox1 = new HBox(5);
         actionBox1.setPadding(new Insets(5, 0, 0, 0));
         actionBox1.setAlignment(Pos.CENTER);
@@ -393,7 +393,7 @@ public class VideosController implements Initializable {
 
         actionBox1.getChildren().addAll(playButton, downloadButton);
 
-        // Botones de acción (segunda fila)
+
         HBox actionBox2 = new HBox(5);
         actionBox2.setPadding(new Insets(5, 0, 5, 0));
         actionBox2.setAlignment(Pos.CENTER);
@@ -408,38 +408,38 @@ public class VideosController implements Initializable {
 
         actionBox2.getChildren().addAll(updateButton, deleteButton);
 
-        // Añadir todos los elementos al contenedor principal - asegurando el orden correcto
+
         infoBox.getChildren().addAll(titleLabel, metadataBox, actionBox1, actionBox2);
         item.getChildren().addAll(previewContainer, infoBox);
 
-        // Eventos de los botones
+
         playButton.setOnAction(event -> playVideo(video));
         downloadButton.setOnAction(event -> downloadVideo(video));
         updateButton.setOnAction(event -> updateVideo(video));
         deleteButton.setOnAction(event -> deleteVideo(video));
 
-        // También permitir hacer clic en la previsualización para reproducir
+
         previewContainer.setOnMouseClicked(event -> playVideo(video));
 
         return item;
     }
 
     private void playVideo(VideoDTO video) {
-        // Mostrar indicador de carga
+
         showAlert(Alert.AlertType.INFORMATION, "Descargando video",
                 "Descargando video para reproducción. Por favor espere...");
 
-        // Realizar la solicitud HTTP para obtener el video completo
+
         new Thread(() -> {
             try {
-                // Obtener el video completo del servidor
+
                 String response = HttpService.getInstance().sendGetRequest(API_GET_VIDEO_URL + video.getId());
                 JSONObject videoJson = new JSONObject(response);
 
-                // Extraer los datos del video en base64
+
                 String videoBase64 = videoJson.getString("video");
 
-                // Decodificar y guardar temporalmente
+
                 byte[] videoBytes = Base64.getDecoder().decode(videoBase64);
 
                 String fileExtension = determineFileExtension(videoBytes);
@@ -449,7 +449,7 @@ public class VideosController implements Initializable {
                     fos.write(videoBytes);
                 }
 
-                // Reproducir el video usando el reproductor predeterminado del sistema
+
                 Platform.runLater(() -> {
                     try {
                         java.awt.Desktop.getDesktop().open(tempFile);
@@ -471,32 +471,32 @@ public class VideosController implements Initializable {
     }
 
     private void downloadVideo(VideoDTO video) {
-        // Mostrar indicador de carga
+
         showAlert(Alert.AlertType.INFORMATION, "Descargando video",
                 "Descargando video. Por favor espere...");
 
-        // Realizar la solicitud HTTP para obtener el video completo
+
         new Thread(() -> {
             try {
-                // Obtener el video completo del servidor
+
                 String response = HttpService.getInstance().sendGetRequest(API_GET_VIDEO_URL + video.getId());
                 JSONObject videoJson = new JSONObject(response);
 
-                // Extraer los datos del video en base64
+
                 String videoBase64 = videoJson.getString("video");
 
-                // Decodificar y guardar
+
                 byte[] videoBytes = Base64.getDecoder().decode(videoBase64);
 
                 String fileExtension = determineFileExtension(videoBytes);
 
-                // Crear directorio de descargas si no existe
+
                 File downloadsDir = new File(System.getProperty("user.home") + "/Downloads");
                 if (!downloadsDir.exists()) {
                     downloadsDir.mkdirs();
                 }
 
-                // Crear nombre de archivo basado en el nombre del video
+
                 String fileName = video.getNombre().replaceAll("[^a-zA-Z0-9.-]", "_") + fileExtension;
                 File outputFile = new File(downloadsDir, fileName);
 
@@ -520,7 +520,7 @@ public class VideosController implements Initializable {
     }
 
     private void updateVideo(VideoDTO video) {
-        // Crear un diálogo para solicitar el nuevo nombre
+
         TextInputDialog dialog = new TextInputDialog(video.getNombre());
         dialog.setTitle("Actualizar Video");
         dialog.setHeaderText("Ingrese el nuevo nombre para el video");
@@ -530,18 +530,18 @@ public class VideosController implements Initializable {
         if (result.isPresent() && !result.get().trim().isEmpty()) {
             String newName = result.get().trim();
 
-            // Mostrar indicador de proceso
+
             showAlert(Alert.AlertType.INFORMATION, "Actualizando video",
                     "Actualizando información del video. Por favor espere...");
 
-            // Realizar la actualización en un hilo separado
+
             new Thread(() -> {
                 try {
-                    // Primero obtenemos todos los datos actuales del video
+
                     String response = HttpService.getInstance().sendGetRequest(API_GET_VIDEO_URL + video.getId());
                     JSONObject videoJson = new JSONObject(response);
 
-                    // Creamos un nuevo JSON con los datos actualizados
+
                     JSONObject updateJson = new JSONObject();
                     updateJson.put("id", video.getId());
                     updateJson.put("nombre", newName);
@@ -551,14 +551,14 @@ public class VideosController implements Initializable {
                     updateJson.put("camaraId", video.getCamaraId());
                     updateJson.put("usuarioId", video.getUsuarioId());
 
-                    // Enviar solicitud de actualización
+
                     String updateResponse = HttpService.getInstance().sendPutRequest(API_UPDATE_VIDEO_URL, updateJson.toString());
 
                     Platform.runLater(() -> {
                         showAlert(Alert.AlertType.INFORMATION, "Video actualizado",
                                 "El nombre del video ha sido actualizado correctamente.");
 
-                        // Actualizar video en la lista local
+
                         for (VideoDTO v : videos) {
                             if (v.getId() == video.getId()) {
                                 v.setNombre(newName);
@@ -566,13 +566,13 @@ public class VideosController implements Initializable {
                             }
                         }
 
-                        // Actualizar la caché si estamos mostrando todos los videos y Redis está disponible
+
                         RedisCache cache = RedisCache.getInstance();
                         if (!mostrandoCache && cache.isRedisDisponible()) {
                             cache.guardarVideosDeUsuario(usuarioId, videos);
                         }
 
-                        // Recargar la vista
+
                         displayVideos();
                     });
 
@@ -588,7 +588,7 @@ public class VideosController implements Initializable {
     }
 
     private void deleteVideo(VideoDTO video) {
-        // Mostrar diálogo de confirmación
+
         Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
         confirmDialog.setTitle("Confirmar eliminación");
         confirmDialog.setHeaderText("¿Está seguro que desea eliminar este video?");
@@ -596,36 +596,36 @@ public class VideosController implements Initializable {
 
         Optional<ButtonType> result = confirmDialog.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            // Mostrar indicador de proceso
+
             showAlert(Alert.AlertType.INFORMATION, "Eliminando video",
                     "Eliminando video. Por favor espere...");
 
-            // Realizar la eliminación en un hilo separado
+
             new Thread(() -> {
                 try {
-                    // Enviar solicitud DELETE
+
                     String deleteUrl = API_DELETE_VIDEO_URL + video.getId();
                     System.out.println("Eliminando video en: " + deleteUrl);
                     HttpService.getInstance().sendDeleteRequest(deleteUrl);
 
-                    // Eliminar el video de la lista local
-                    final VideoDTO videoToRemove = video; // Variable final para usar en lambda
+
+                    final VideoDTO videoToRemove = video;
 
                     Platform.runLater(() -> {
                         try {
                             showAlert(Alert.AlertType.INFORMATION, "Video eliminado",
                                     "El video ha sido eliminado correctamente.");
 
-                            // Eliminar el video de la lista
+
                             videos.removeIf(v -> v.getId() == videoToRemove.getId());
 
-                            // Actualizar la caché si estamos mostrando todos los videos y Redis está disponible
+
                             RedisCache cache = RedisCache.getInstance();
                             if (!mostrandoCache && cache.isRedisDisponible()) {
                                 cache.guardarVideosDeUsuario(usuarioId, videos);
                             }
 
-                            // Actualizar la vista en el hilo de UI
+
                             displayVideos();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -645,26 +645,26 @@ public class VideosController implements Initializable {
         }
     }
 
-    // Método para determinar la extensión de archivo basado en los primeros bytes
+
     private String determineFileExtension(byte[] data) {
         if (data.length < 12) {
-            return ".mp4"; // Valor predeterminado
+            return ".mp4";
         }
 
-        // Verificar firmas comunes de archivos de video
+
         if (data[0] == (byte)0x00 && data[1] == (byte)0x00 &&
                 data[2] == (byte)0x00 && data[3] == (byte)0x1C &&
                 data[4] == (byte)0x66 && data[5] == (byte)0x74 &&
                 data[6] == (byte)0x79 && data[7] == (byte)0x70) {
-            return ".mp4"; // Formato MP4
+            return ".mp4";
         }
 
         if (data[0] == (byte)0x52 && data[1] == (byte)0x49 &&
                 data[2] == (byte)0x46 && data[3] == (byte)0x46) {
-            return ".avi"; // Formato AVI
+            return ".avi";
         }
 
-        // Valor predeterminado si no se reconoce
+
         return ".mp4";
     }
 
@@ -679,7 +679,7 @@ public class VideosController implements Initializable {
     }
 
     public void refreshVideos() {
-        // Si estábamos mostrando caché, mantener ese estado
+
         if (mostrandoCache) {
             cargarVideosDesdeCache();
         } else {

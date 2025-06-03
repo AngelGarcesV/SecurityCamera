@@ -6,7 +6,7 @@ public class VideoDTO {
     private Long id;
     private String nombre;
     private Date fecha;
-    private String video; // Cambiado de byte[] a String para transmitir como base64
+    private String video;
     private String duracion;
     private Long camaraId;
     private Long usuarioId;

@@ -10,7 +10,7 @@ public class PoolFiltroRotar {
     private static PoolFiltroRotar instance;
 
     private PoolFiltroRotar() {
-        // Inicializar el pool con algunos filtros
+
         for (int i = 0; i < 5; i++) {
             pool.offer(new FiltroRotar());
         }

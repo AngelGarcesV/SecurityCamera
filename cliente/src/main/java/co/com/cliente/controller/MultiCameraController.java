@@ -64,11 +64,11 @@ public class MultiCameraController implements Initializable {
 
     private List<CamaraDTO> activeCameras = new ArrayList<>();
     private Map<Long, CameraPanel> cameraPanels = new HashMap<>();
-    private ExecutorService executorService = Executors.newFixedThreadPool(50); // Más hilos para grabación
+    private ExecutorService executorService = Executors.newFixedThreadPool(50);
     private Timer refreshTimer;
     private boolean isActive = true;
 
-    // Variables para grabación múltiple
+
     private boolean isRecordingAll = false;
     private AtomicInteger recordingSeconds = new AtomicInteger(0);
     private Timer recordingTimer;
@@ -78,7 +78,7 @@ public class MultiCameraController implements Initializable {
     private File recordingsDir;
     private WebSocketVideoService webSocketService;
 
-    // Configuraciones de layout
+
     private static final Map<String, int[]> LAYOUT_CONFIGS = Map.of(
             "1 Columna", new int[]{1, 0},
             "2 Columnas", new int[]{2, 0},
@@ -128,24 +128,24 @@ public class MultiCameraController implements Initializable {
     }
 
     private void setupUI() {
-        // Configurar ComboBox de layouts
+
         layoutComboBox.getItems().addAll(LAYOUT_CONFIGS.keySet());
         layoutComboBox.setValue("Auto");
         layoutComboBox.setOnAction(e -> updateLayout());
 
-        // Configurar ScrollPane
+
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        // Configurar GridPane
+
         cameraGrid.setHgap(10);
         cameraGrid.setVgap(10);
         cameraGrid.setPadding(new Insets(10));
         cameraGrid.setAlignment(Pos.CENTER);
 
-        // Configurar botones de grabación
+
         recordAllButton.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white; -fx-font-weight: bold;");
         snapshotAllButton.setStyle("-fx-background-color: #4285f4; -fx-text-fill: white; -fx-font-weight: bold;");
 
@@ -180,7 +180,7 @@ public class MultiCameraController implements Initializable {
                 return CompletableFuture.completedFuture(new ArrayList<CamaraDTO>());
             }
 
-            // Probar conexión a cada cámara en paralelo
+
             List<CompletableFuture<CamaraDTO>> futures = allCameras.stream()
                     .map(this::testAndReturnCamera)
                     .toList();
@@ -248,17 +248,17 @@ public class MultiCameraController implements Initializable {
                 System.out.println("❌ " + camara.getDescripcion() + " no disponible: " + e.getMessage());
             }
 
-            return null; // Cámara no disponible
+            return null;
         }, executorService);
     }
 
     private void setupCameraPanels() {
-        // Limpiar paneles existentes
+
         cameraPanels.values().forEach(CameraPanel::stop);
         cameraPanels.clear();
         cameraGrid.getChildren().clear();
 
-        // Crear nuevos paneles para cámaras activas usando la clase externa
+
         for (CamaraDTO camara : activeCameras) {
             CameraPanel panel = new CameraPanel(camara, executorService, webSocketService, recordingsDir);
             cameraPanels.put(camara.getId(), panel);
@@ -279,14 +279,14 @@ public class MultiCameraController implements Initializable {
             int columns = config[0];
             int rows = config[1];
 
-            // Calcular layout automático si es necesario
+
             if (columns == 0) {
                 int cameraCount = activeCameras.size();
                 columns = (int) Math.ceil(Math.sqrt(cameraCount));
                 rows = (int) Math.ceil((double) cameraCount / columns);
             }
 
-            // Configurar constraints de columnas y filas
+
             for (int i = 0; i < columns; i++) {
                 ColumnConstraints colConstraints = new ColumnConstraints();
                 colConstraints.setPercentWidth(100.0 / columns);
@@ -303,7 +303,7 @@ public class MultiCameraController implements Initializable {
                 }
             }
 
-            // Colocar paneles de cámaras en el grid
+
             int currentRow = 0;
             int currentCol = 0;
 
@@ -350,12 +350,11 @@ public class MultiCameraController implements Initializable {
         currentSessionId = UUID.randomUUID().toString();
         isRecordingAll = true;
 
-        // Iniciar grabación en todas las cámaras
+
         for (CameraPanel panel : cameraPanels.values()) {
             panel.startRecording(currentSessionId);
         }
 
-        // Actualizar UI
         Platform.runLater(() -> {
             recordAllButton.setText("🛑 DETENER GRABACIÓN");
             recordAllButton.setStyle("-fx-background-color: #ea4335; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -372,12 +371,12 @@ public class MultiCameraController implements Initializable {
         isRecordingAll = false;
         stopTimer.set(true);
 
-        // Detener grabación en todas las cámaras
+
         for (CameraPanel panel : cameraPanels.values()) {
             panel.stopRecording();
         }
 
-        // Actualizar UI
+
         Platform.runLater(() -> {
             recordAllButton.setText("🔴 GRABAR TODAS");
             recordAllButton.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -472,11 +471,10 @@ public class MultiCameraController implements Initializable {
             @Override
             public void run() {
                 if (isActive && !activeCameras.isEmpty()) {
-                    // Refrescar imágenes de todas las cámaras
                     cameraPanels.values().forEach(CameraPanel::refreshImage);
                 }
             }
-        }, 1000, 2000); // Refrescar cada 2 segundos
+        }, 1000, 2000);
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

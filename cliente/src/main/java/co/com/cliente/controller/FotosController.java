@@ -46,7 +46,7 @@ public class FotosController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         executorService = Executors.newFixedThreadPool(4);
 
-        // Asegurarnos de que el JWT esté configurado
+
         configurarJWT();
 
         photoGrid.setHgap(20);
@@ -57,15 +57,9 @@ public class FotosController implements Initializable {
     }
 
     private void configurarJWT() {
-        // Aquí se configuraría el JWT en el HttpService
-        // Suponemos que ya está configurado o que se obtiene de alguna parte
 
-        // Si no está configurado y es necesario, podemos añadir código
-        // para obtenerlo de alguna fuente (sesión, preferencias, etc.)
         if (HttpService.getInstance().getJwtToken() == null ||
                 HttpService.getInstance().getJwtToken().isEmpty()) {
-            // Obtener JWT de alguna fuente y configurarlo
-            // Por ejemplo: HttpService.getInstance().setJwtToken(obtenerJWTDeSesion());
         }
     }
 
@@ -85,7 +79,7 @@ public class FotosController implements Initializable {
                 photoGrid.getChildren().clear();
                 Label errorLabel;
 
-                // Verificar si el error es 404 (no se encontraron imágenes)
+
                 if (e.getMessage() != null && e.getMessage().contains("404")) {
                     errorLabel = new Label("No se han tomado imágenes");
                 } else {
@@ -118,54 +112,54 @@ public class FotosController implements Initializable {
     }
 
     private void addPhotoToGrid(ImagenDTO imagen) {
-        // Contenedor principal para cada foto
+
         VBox photoContainer = new VBox();
         photoContainer.setAlignment(Pos.CENTER);
         photoContainer.setSpacing(5);
         photoContainer.setPrefWidth(THUMBNAIL_SIZE);
 
-        // Contenedor para la imagen
+
         StackPane photoItem = new StackPane();
         photoItem.setPrefSize(THUMBNAIL_SIZE, THUMBNAIL_SIZE);
         photoItem.setStyle("-fx-background-color: #e0e0e0;");
 
-        // Label para el nombre de la foto
+
         Label nameLabel = new Label(imagen.getNombre());
         nameLabel.setMaxWidth(THUMBNAIL_SIZE);
         nameLabel.setWrapText(true);
         nameLabel.setTextAlignment(TextAlignment.CENTER);
         nameLabel.setAlignment(Pos.CENTER);
 
-        // HBox para los botones - ahora con 3 botones
+
         HBox buttonBox = new HBox();
         buttonBox.setSpacing(3);
         buttonBox.setAlignment(Pos.CENTER);
 
-        // Botón de editar foto
+
         Button editButton = new Button("Editar");
         editButton.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-size: 10px;");
         editButton.setPrefWidth(60);
         editButton.setOnAction(e -> openEditarFotosView(imagen));
 
-        // Botón de actualizar
+
         Button updateButton = new Button("Actualizar");
         updateButton.setStyle("-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-size: 10px;");
         updateButton.setPrefWidth(60);
         updateButton.setOnAction(e -> showUpdateDialog(imagen));
 
-        // Botón de eliminar
+
         Button deleteButton = new Button("Eliminar");
         deleteButton.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 10px;");
         deleteButton.setPrefWidth(60);
         deleteButton.setOnAction(e -> confirmAndDelete(imagen));
 
-        // Agregar botones al HBox
+
         buttonBox.getChildren().addAll(editButton, updateButton, deleteButton);
 
-        // Agregar todo al contenedor principal
+
         photoContainer.getChildren().addAll(photoItem, nameLabel, buttonBox);
 
-        // Agregar el contenedor principal al grid
+
         photoGrid.getChildren().add(photoContainer);
 
         executorService.submit(() -> {
@@ -205,30 +199,30 @@ public class FotosController implements Initializable {
 
     private void openEditarFotosView(ImagenDTO imagen) {
         try {
-            // Cargar la vista de editar fotos
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/com/cliente/views/editar-fotos-view.fxml"));
             Parent editView = loader.load();
 
-            // Obtener el controlador de la vista de edición
+
             Object controller = loader.getController();
 
-            // Si el controlador tiene un método para establecer la imagen, llamarlo
+
             if (controller != null) {
                 try {
-                    // Usar reflexión para llamar al método setImagenToEdit si existe
+
                     controller.getClass().getMethod("setImagenToEdit", ImagenDTO.class).invoke(controller, imagen);
                 } catch (Exception e) {
                     System.out.println("El controlador no tiene método setImagenToEdit: " + e.getMessage());
                 }
             }
 
-            // Obtener el StackPane principal de la aplicación
+
             StackPane contentArea = getContentArea();
             if (contentArea != null) {
                 contentArea.getChildren().clear();
                 contentArea.getChildren().add(editView);
 
-                // Actualizar el título si es posible
+
                 updateTitle("EDITAR FOTOS");
             }
 
@@ -240,7 +234,7 @@ public class FotosController implements Initializable {
 
     private StackPane getContentArea() {
         try {
-            // Navegar por la jerarquía de nodos para encontrar el contentArea
+
             Parent root = photoGrid.getScene().getRoot();
             return findStackPane(root);
         } catch (Exception e) {
@@ -296,16 +290,16 @@ public class FotosController implements Initializable {
     }
 
     private void showUpdateDialog(ImagenDTO imagen) {
-        // Crear un diálogo personalizado
+
         Dialog<Pair<String, String>> dialog = new Dialog<>();
         dialog.setTitle("Actualizar Imagen");
         dialog.setHeaderText("Modificar nombre y resolución");
 
-        // Configurar botones
+
         ButtonType updateButtonType = new ButtonType("Actualizar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
 
-        // Crear campos de formulario
+
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -321,7 +315,7 @@ public class FotosController implements Initializable {
 
         dialog.getDialogPane().setContent(grid);
 
-        // Establecer el resultado cuando se hace clic en el botón actualizar
+
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == updateButtonType) {
                 return new Pair<>(nombreField.getText(), resolucionField.getText());
@@ -329,7 +323,7 @@ public class FotosController implements Initializable {
             return null;
         });
 
-        // Mostrar el diálogo y procesar el resultado
+
         Optional<Pair<String, String>> result = dialog.showAndWait();
         result.ifPresent(nombreResolucion -> {
             updateImage(imagen, nombreResolucion.getKey(), nombreResolucion.getValue());
@@ -347,18 +341,18 @@ public class FotosController implements Initializable {
             jsonRequest.put("camaraId", imagen.getCamaraId());
             jsonRequest.put("usuarioId", imagen.getUsuarioId());
 
-            // No incluimos la imagen completa para evitar enviar grandes cantidades de datos
 
-            // Enviar solicitud PUT
+
+
             HttpService.getInstance().sendPutRequest(
                     API_BASE_URL + "/update",
                     jsonRequest.toString()
             );
 
-            // Recargar imágenes después de actualizar
+
             loadImages();
 
-            // Mostrar mensaje de éxito
+
             showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen actualizada correctamente");
 
         } catch (Exception e) {
@@ -381,10 +375,9 @@ public class FotosController implements Initializable {
 
     private void deleteImage(ImagenDTO imagen) {
         try {
-            // Enviar solicitud DELETE
+
             HttpService.getInstance().sendDeleteRequest(API_BASE_URL + "/" + imagen.getId());
 
-            // Crear una nueva lista sin la imagen eliminada
             List<ImagenDTO> updatedImages = new ArrayList<>();
             for (ImagenDTO img : currentImages) {
                 if (!img.getId().equals(imagen.getId())) {
@@ -392,11 +385,11 @@ public class FotosController implements Initializable {
                 }
             }
 
-            // Actualizar la lista actual y redibujar
+
             currentImages = updatedImages;
             displayImages();
 
-            // Mostrar mensaje de éxito
+
             showAlert(Alert.AlertType.INFORMATION, "Éxito", "Imagen eliminada correctamente");
 
         } catch (Exception e) {
@@ -407,16 +400,13 @@ public class FotosController implements Initializable {
 
     private void viewFullImage(ImagenDTO imagen) {
         try {
-            // Create a temporary file
             File tempFile = File.createTempFile("image_", ".png");
             tempFile.deleteOnExit();
 
-            // Write the byte array to the file
             try (FileOutputStream fos = new FileOutputStream(tempFile)) {
                 fos.write(imagen.getImagen());
             }
 
-            // Open the file
             java.awt.Desktop.getDesktop().open(tempFile);
         } catch (Exception e) {
             e.printStackTrace();

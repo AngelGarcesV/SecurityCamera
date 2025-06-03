@@ -10,10 +10,8 @@ public class CamaraDTO {
     private String resolucion;
     private Long usuarioId;
 
-    // Constructor vacío
     public CamaraDTO() {}
 
-    // Constructor completo
     public CamaraDTO(Long id, String ip, Integer puerto, String descripcion,
                      Double coordenadax, Double coordenaday, String resolucion, Long usuarioId) {
         this.id = id;
@@ -26,7 +24,6 @@ public class CamaraDTO {
         this.usuarioId = usuarioId;
     }
 
-    // Getters y Setters
     public Long getId() {
         return id;
     }
