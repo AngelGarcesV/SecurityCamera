@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -191,10 +192,15 @@ public class VideoWebSocketHandler implements WebSocketHandler {
 
     private void sendProgressMessage(WebSocketSession session, VideoUploadSession uploadSession) throws IOException {
         double progress = (double) uploadSession.getReceivedBytes() / uploadSession.getExpectedSize() * 100;
-        String progressMessage = String.format(
-                "{\"type\":\"upload_progress\",\"progress\":%.2f,\"receivedBytes\":%d,\"totalBytes\":%d}",
-                progress, uploadSession.getReceivedBytes(), uploadSession.getExpectedSize()
-        );
+
+        // Alternativa más robusta usando ObjectMapper
+        Map<String, Object> progressData = new HashMap<>();
+        progressData.put("type", "upload_progress");
+        progressData.put("progress", Math.round(progress * 100.0) / 100.0);
+        progressData.put("receivedBytes", uploadSession.getReceivedBytes());
+        progressData.put("totalBytes", uploadSession.getExpectedSize());
+
+        String progressMessage = objectMapper.writeValueAsString(progressData);
         session.sendMessage(new TextMessage(progressMessage));
     }
 
